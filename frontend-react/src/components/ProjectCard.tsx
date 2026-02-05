@@ -44,3 +44,4 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
 };
 
 export default ProjectCard;
+
