@@ -19,32 +19,6 @@ import java.util.List;
 @RequestMapping("/projects")
 public class ProjectController {
 
-    private final GetAllProjects getAllProjects;
-    private final GetProject getProject;
-    private final CreateProject createProject;
 
-    public ProjectController(GetAllProjects getAllProjects, GetProject getProject, CreateProject createProject) {
-        this.getAllProjects = getAllProjects;
-        this.getProject = getProject;
-        this.createProject = createProject;
-    }
-
-    @GetMapping("/")
-    public ResponseEntity<List<Project>> getAllProjects(
-            @Valid UserProjectQueryParams userProjectQueryParams,
-            Authentication authentication){
-
-        String email = (String) authentication.getPrincipal();
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Project> getProjects(String id){
-
-    }
-
-    @PostMapping("/create-project")
-    public ResponseEntity<String> createProject(Project project){
-
-    }
 
 }

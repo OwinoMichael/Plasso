@@ -3,7 +3,7 @@ package com.mikeo.plasso.features.projects.handleQueries;
 import com.mikeo.plasso.Query;
 import com.mikeo.plasso.features.projects.ProjectRepository;
 import com.mikeo.plasso.features.projects.entity.Project;
-import org.hibernate.query.Page;
+import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;

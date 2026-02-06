@@ -19,8 +19,12 @@ public class User extends AbstractEntity {
     private String id;
 
     @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 20, message = "Username must be between 3-20 characters")
-    @Column(name = "username")
+    @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
+    @Pattern(
+            regexp = "^[a-z][a-z0-9_]{2,19}$",
+            message = "Username must start with a letter and contain only lowercase letters, numbers, and underscores"
+    )
+    @Column(name = "username", nullable = false, unique = true, length = 20)
     private String username;
 
     @NotBlank(message = "Email is required")

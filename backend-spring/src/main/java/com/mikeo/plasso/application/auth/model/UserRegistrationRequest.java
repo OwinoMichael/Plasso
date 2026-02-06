@@ -1,18 +1,20 @@
 package com.mikeo.plasso.application.auth.model;
 
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class UserRegistrationRequest {
-    @NotBlank(message = "First name is required")
-    @Size(min = 2, max = 50)
-    private String firstName;
-
-    @NotBlank(message = "Last name is required")
-    @Size(min = 2, max = 50)
-    private String lastName;
+    @NotBlank(message = "Username is required")
+    @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
+    @Pattern(
+            regexp = "^[a-z][a-z0-9_]{2,19}$",
+            message = "Username must start with a letter and contain only lowercase letters, numbers, and underscores"
+    )
+    @Column(name = "username", nullable = false, unique = true, length = 20)
+    private String username;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Please provide a valid email address")
@@ -26,27 +28,24 @@ public class UserRegistrationRequest {
     public UserRegistrationRequest() {
     }
 
-    public UserRegistrationRequest(String firstName, String lastName, String password, String email) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.password = password;
+    public UserRegistrationRequest(String username, String email, String password) {
+        this.username = username;
         this.email = email;
+        this.password = password;
     }
 
-    public @NotBlank(message = "First name is required") @Size(min = 2, max = 50) String getFirstName() {
-        return firstName;
+    public @NotBlank(message = "Username is required") @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters") @Pattern(
+            regexp = "^[a-z][a-z0-9_]{2,19}$",
+            message = "Username must start with a letter and contain only lowercase letters, numbers, and underscores"
+    ) String getUsername() {
+        return username;
     }
 
-    public void setFirstName(@NotBlank(message = "First name is required") @Size(min = 2, max = 50) String firstName) {
-        this.firstName = firstName;
-    }
-
-    public @NotBlank(message = "Last name is required") @Size(min = 2, max = 50) String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(@NotBlank(message = "Last name is required") @Size(min = 2, max = 50) String lastName) {
-        this.lastName = lastName;
+    public void setUsername(@NotBlank(message = "Username is required") @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters") @Pattern(
+            regexp = "^[a-z][a-z0-9_]{2,19}$",
+            message = "Username must start with a letter and contain only lowercase letters, numbers, and underscores"
+    ) String username) {
+        this.username = username;
     }
 
     public @NotBlank(message = "Email is required") @Email(message = "Please provide a valid email address") String getEmail() {
