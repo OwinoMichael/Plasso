@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Terminal, Eye, EyeOff, Loader2, CheckCircle, Shield } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import AuthService from '@/services/AuthService';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -13,16 +13,55 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!email.trim() || !password.trim()) {
+      setErrorMessage('Email and password are required.');
+      return;
+    }
+
     setIsLoading(true);
-    // TODO: Implement login logic
-    console.log('Login:', { email, password });
-    setTimeout(() => {
+    setErrorMessage('');
+
+    try {
+      // TODO: Replace with your actual AuthService import
+      // import { AuthService } from '@/services/auth-service';
+      const response = await AuthService.login(email.trim(), password.trim());
+      console.log('Login successful:', response);
+
+      const user = AuthService.getCurrentUser();
+
+      if (user?.verified) {
+        navigate('/home', { replace: true });
+      } else if (user && !user.verified) {
+        // If you have an unverified email page
+        navigate('/unverified-email', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
+
+    } catch (error: any) {
+      console.error('Login error:', error);
+
+      // Handle different error cases
+      if (error.name === 'ACCOUNT_NOT_VERIFIED') {
+        const unverifiedEmail = error.data?.email || email;
+        sessionStorage.setItem('unverifiedEmail', unverifiedEmail);
+        navigate('/unverified-email', { replace: true });
+        return;
+      } else if (error.name === 'INVALID_CREDENTIALS' || error.response?.status === 401) {
+        setErrorMessage('Invalid email or password.');
+      } else {
+        const fallback = error.response?.data?.message || error.message || 'An error occurred during login.';
+        setErrorMessage(fallback);
+      }
+    } finally {
       setIsLoading(false);
-      navigate('/');
-    }, 1000);
+    }
   };
 
   return (
@@ -47,6 +86,13 @@ const Login = () => {
             </CardHeader>
             
             <CardContent className="relative z-10">
+              {/* Error Message */}
+              {errorMessage && (
+                <div className="text-sm text-red-600 text-center bg-red-50 border border-red-200 p-3 rounded-xl mb-6">
+                  {errorMessage}
+                </div>
+              )}
+
               <form onSubmit={handleSubmit}>
                 <div className="grid gap-6">
                   <div className="grid gap-2">
@@ -56,7 +102,10 @@ const Login = () => {
                       type="email"
                       placeholder="you@example.com"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (errorMessage) setErrorMessage('');
+                      }}
                       className="h-12 px-4 bg-background/70 backdrop-blur-sm border-border hover:border-primary/50 focus:border-primary transition-all duration-200"
                       required
                     />
@@ -70,7 +119,10 @@ const Login = () => {
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          if (errorMessage) setErrorMessage('');
+                        }}
                         className="h-12 px-4 pr-12 bg-background/70 backdrop-blur-sm border-border hover:border-primary/50 focus:border-primary transition-all duration-200"
                         required
                       />

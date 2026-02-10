@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { CustomError } from './CustomError';
 
+
 const API_URL = 'http://localhost:8080';
 
 axios.defaults.headers.common['Content-Type'] = 'application/json';
@@ -123,12 +124,11 @@ class AuthService {
     console.log('User logged out, localStorage cleared');
   }
 
-  signup(firstName: string, lastName: string, email: string, password: string) {
+  signup(username: string, email: string, password: string) {
     console.log('Signup request for:', email);
 
     return axios.post(`${API_URL}/createNewUser`, {
-      firstName,
-      lastName,
+      username,
       email,
       password,
     });
@@ -146,6 +146,20 @@ class AuthService {
       console.error('Error resending verification email:', error);
       throw error;
     });
+  }
+
+  forgotPassword(email: string): Promise<any> {
+    console.log('Sending password reset email to:', email);
+
+    return axios.post(`${API_URL}/forgot-password`, { email })
+      .then((response) => {
+        console.log('Password reset email sent successfully:', response);
+        return response.data;
+      })
+      .catch((error) => {
+        console.error('Error sending password reset email:', error);
+        throw error;
+      });
   }
 
 

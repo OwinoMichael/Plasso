@@ -41,6 +41,10 @@ public class RegistrationService implements Command<UserRegistrationRequest, T> 
     @Override
     public ResponseEntity execute(UserRegistrationRequest request) {
         try {
+
+            logger.info("Registration request received - Username: {}, Email: {}",
+                    request.getUsername(), request.getEmail());
+
             Optional<User> existingUser = usersRepository.findUsersByEmail(request.getEmail());
 
             if(existingUser.isPresent()){
@@ -54,6 +58,10 @@ public class RegistrationService implements Command<UserRegistrationRequest, T> 
             user.setEmail(request.getEmail());
             user.setPassword(encoder.encode(request.getPassword()));
             user.setEmailVerified(false);
+
+            // Log before save
+            logger.info("About to save user - Username: {}, Email: {}, EmailVerified: {}",
+                    user.getUsername(), user.getEmail(), user.getIsEmailVerified());
 
             User savedUser = usersRepository.save(user);
 

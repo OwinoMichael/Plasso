@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Mail, Loader2, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import AuthService from '@/services/AuthService';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -16,12 +17,49 @@ const ForgotPassword = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      setEmailError('Email is required.');
+      return;
+    }
+    
+    if (!emailRegex.test(email.trim())) {
+      setEmailError('Please enter a valid email address.');
+      return;
+    }
+
     setIsLoading(true);
-    // TODO: Implement forgot password logic
-    setTimeout(() => {
-      setStatusMessage('Password reset email sent successfully!');
+    setEmailError('');
+    setStatusMessage('');
+
+    try {
+      // TODO: Replace with your actual AuthService import
+      // import { AuthService } from '@/services/auth-service';
+      
+      // Assuming your AuthService has a forgotPassword method
+      await AuthService.forgotPassword(email.trim());
+      
+      setStatusMessage('Password reset email sent successfully! Check your inbox for further instructions.');
+      
+    } catch (error: any) {
+      console.error("Forgot password error:", error);
+      
+      // Handle different error cases
+      if (error.response?.status === 404) {
+        setEmailError('No account found with this email address.');
+      } else if (error.response?.status === 400) {
+        setEmailError('Invalid email format.');
+      } else if (error.response?.status === 429) {
+        setStatusMessage('Too many requests. Please wait before trying again.');
+      } else {
+        const fallback = error.response?.data?.message || error.message || 'An error occurred. Please try again.';
+        setStatusMessage(fallback);
+      }
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -58,6 +96,7 @@ const ForgotPassword = () => {
                       onChange={(e) => {
                         setEmail(e.target.value);
                         setEmailError('');
+                        if (statusMessage) setStatusMessage('');
                       }}
                       className={cn(
                         "h-12 px-4 bg-background/70 backdrop-blur-sm border-border hover:border-primary/50 focus:border-primary transition-all duration-200",
@@ -86,8 +125,18 @@ const ForgotPassword = () => {
                   </Button>
 
                   {statusMessage && (
-                    <Alert className="border-green-200 bg-green-50/80">
-                      <AlertDescription className="text-green-700">
+                    <Alert className={cn(
+                      "border-green-200 bg-green-50/80",
+                      statusMessage.includes('error') || statusMessage.includes('Error') || statusMessage.includes('fail') 
+                        ? "border-red-200 bg-red-50/80" 
+                        : ""
+                    )}>
+                      <AlertDescription className={cn(
+                        "text-green-700",
+                        statusMessage.includes('error') || statusMessage.includes('Error') || statusMessage.includes('fail') 
+                          ? "text-red-700" 
+                          : ""
+                      )}>
                         {statusMessage}
                       </AlertDescription>
                     </Alert>

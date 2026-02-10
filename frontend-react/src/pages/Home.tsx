@@ -2,9 +2,18 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Terminal, Settings, Plus, FolderPlus, Users, Sparkles, FileCode, Clock, Star } from 'lucide-react';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Terminal, Settings, Plus, FolderPlus, Users, Sparkles, FileCode, Clock, Star, LogOut, User } from 'lucide-react';
 import ProjectCard from '../components/ProjectCard';
 import StatCard from '../components/StatCard';
+import AuthService from '@/services/AuthService';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -15,6 +24,39 @@ const Home = () => {
     { id: '3', name: 'ML Model Training', lastModified: '3 days ago', collaborators: 1, language: 'Python' },
     { id: '4', name: 'Node Backend', lastModified: '5 days ago', collaborators: 4, language: 'JavaScript' }
   ];
+
+  const handleLogout = () => {
+    try {
+      // Call AuthService logout to clear tokens/user data
+      AuthService.logout();
+      
+      // Clear any additional local storage items if needed
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
+      sessionStorage.clear(); // Optional: clear session storage
+      
+      // Clear any application state if using context/Redux
+      // Example: clearUserContext(); 
+      
+      // Show logout message (optional)
+      console.log('Logged out successfully');
+      
+      // Redirect to login page with replace to prevent going back
+      navigate('/login', { replace: true });
+      
+      // Optional: Show success toast/notification
+      // toast.success('Logged out successfully');
+      
+    } catch (error) {
+      console.error('Logout error:', error);
+      
+      // Still redirect to login even if logout fails
+      navigate('/login', { replace: true });
+      
+      // Optional: Show error toast
+      // toast.error('Error during logout');
+    }
+  };
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -29,9 +71,34 @@ const Home = () => {
           <Button variant="outline" size="sm">
             <Settings className="w-4 h-4" />
           </Button>
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-semibold">
-            U
-          </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-semibold cursor-pointer hover:opacity-80 transition-opacity">
+                U
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="cursor-pointer">
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                onClick={handleLogout}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Logout</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

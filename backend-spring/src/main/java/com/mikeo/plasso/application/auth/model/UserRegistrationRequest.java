@@ -13,7 +13,6 @@ public class UserRegistrationRequest {
             regexp = "^[a-z][a-z0-9_]{2,19}$",
             message = "Username must start with a letter and contain only lowercase letters, numbers, and underscores"
     )
-    @Column(name = "username", nullable = false, unique = true, length = 20)
     private String username;
 
     @NotBlank(message = "Email is required")

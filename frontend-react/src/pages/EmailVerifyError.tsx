@@ -3,18 +3,82 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal, AlertCircle, Loader2, CheckCircle, Mail } from 'lucide-react';
+import AuthService from '@/services/AuthService';
 
 const EmailVerifyError = () => {
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  // Get email from localStorage or sessionStorage (from signup/login)
+  const getStoredEmail = () => {
+    try {
+      // Check localStorage first (from signup)
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user.email) return user.email;
+      }
+      
+      // Check sessionStorage (from login)
+      const unverifiedEmail = sessionStorage.getItem('unverifiedEmail');
+      if (unverifiedEmail) return unverifiedEmail;
+      
+      // Return empty string if no email found
+      return '';
+    } catch (error) {
+      console.error('Error retrieving stored email:', error);
+      return '';
+    }
+  };
 
   const handleResend = async () => {
+    const email = getStoredEmail();
+    
+    if (!email) {
+      setStatusMessage('No email address found. Please try signing up or logging in again.');
+      setIsSuccess(false);
+      return;
+    }
+
     setLoading(true);
-    // TODO: Implement resend verification email logic
-    setTimeout(() => {
-      setStatusMessage('Verification email sent successfully!');
+    setStatusMessage('');
+    setIsSuccess(false);
+
+    try {
+      // TODO: Import your AuthService
+      // import { AuthService } from '@/services/auth-service';
+      
+      await AuthService.resendVerification(email);
+      
+      setStatusMessage('Verification email sent successfully! Please check your inbox and spam folder.');
+      setIsSuccess(true);
+      
+    } catch (error: any) {
+      console.error('Resend verification error:', error);
+      
+      // Handle different error cases
+      if (error.response?.status === 404) {
+        setStatusMessage('No account found with this email address. Please sign up again.');
+      } else if (error.response?.status === 400) {
+        if (error.response?.data?.message?.includes('already verified')) {
+          setStatusMessage('This account is already verified. You can now log in.');
+        } else {
+          setStatusMessage('Invalid request. Please try again.');
+        }
+      } else if (error.response?.status === 429) {
+        setStatusMessage('Too many requests. Please wait a few minutes before trying again.');
+      } else if (error.response?.status === 500) {
+        setStatusMessage('Server error. Please try again later.');
+      } else {
+        const fallback = error.response?.data?.message || error.message || 'Failed to send verification email. Please try again.';
+        setStatusMessage(fallback);
+      }
+      
+      setIsSuccess(false);
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -63,8 +127,16 @@ const EmailVerifyError = () => {
               </Button>
 
               {statusMessage && (
-                <Alert className={statusMessage.includes('successfully') ? 'border-green-200 bg-green-50/80' : 'border-red-200 bg-red-50/80'}>
-                  <AlertDescription className={statusMessage.includes('successfully') ? 'text-green-700' : 'text-red-700'}>
+                <Alert className={
+                  isSuccess 
+                    ? 'border-green-200 bg-green-50/80 backdrop-blur-sm' 
+                    : 'border-red-200 bg-red-50/80 backdrop-blur-sm'
+                }>
+                  <AlertDescription className={
+                    isSuccess 
+                      ? 'text-green-700' 
+                      : 'text-red-700'
+                  }>
                     {statusMessage}
                   </AlertDescription>
                 </Alert>

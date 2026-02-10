@@ -11,7 +11,7 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "users")
-public class User extends AbstractEntity {
+public class User extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -29,14 +29,14 @@ public class User extends AbstractEntity {
 
     @NotBlank(message = "Email is required")
     @Email(message = "Please provide a valid email address")
-    @Column(name = "email")
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
     @NotBlank(message = "Password is required")
     @Size(min = 8, message = "Password must be at least 8 characters long")
     @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$",
             message = "Password must contain at least one digit, one lowercase, one uppercase, one special character, and no whitespace")
-    @Column(name = "password")
+    @Column(name = "password_hash")
     private String password;
 
     @Column(name = "email_verified", nullable = false)
