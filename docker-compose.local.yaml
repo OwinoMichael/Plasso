@@ -1,0 +1,58 @@
+services:
+  db:
+    image: ankane/pgvector
+    container_name: pg-db-local
+    ports:
+      - "5433:5432"  # Changed to avoid conflict with local PostgreSQL
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - pgdata_local:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  spring:
+    build:
+      context: ./backend-spring
+    container_name: springboot-app-local
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  react:
+    build:
+      context: ./frontend-react
+    container_name: react-app-local
+    working_dir: /app
+    environment:
+      - VITE_WS_URL=ws://localhost:8080/ws/audio
+      - VITE_API_URL=http://localhost:8080/api
+      - VITE_REACT_APP_ENV=development
+    depends_on:
+      - spring
+    ports:
+      - "3000:80"
+    networks:
+      - app-network
+  
+volumes:
+  pgdata_local:
+
+
+networks:
+  app-network:
+    driver: bridge

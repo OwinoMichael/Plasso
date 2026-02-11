@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Terminal, Home, Upload, Download, Share2, Sparkles, Play, PanelLeft, PanelRight, PanelBottom } from 'lucide-react';
 
 interface NavbarProps {
-  projectName: string;
+  projectName?: string;
   onHome: () => void;
   onToggleSidebar: () => void;
   onToggleAI: () => void;
