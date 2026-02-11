@@ -1,7 +1,7 @@
 services:
   db:
     image: ankane/pgvector:latest
-    container_name: pg-db-prod
+    container_name: plasso-pg-db-prod
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
@@ -26,7 +26,7 @@ services:
     build:
       context: ./backend-spring
       dockerfile: Dockerfile
-    container_name: springboot-app-prod
+    container_name: plasso-springboot-app-prod
     environment:
       SPRING_PROFILES_ACTIVE: prod
       DB_URL: jdbc:postgresql://db:5432/${DB_NAME}
@@ -59,7 +59,7 @@ services:
       args:
         - VITE_API_URL=${VITE_API_URL}
         - VITE_WS_URL=${VITE_WS_URL}
-    container_name: react-app-prod
+    container_name: plasso-react-app-prod
     depends_on:
       - spring
     ports:
