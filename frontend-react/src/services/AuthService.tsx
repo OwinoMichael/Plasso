@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { CustomError } from './CustomError';
+import CustomError from './CustomError';
+
 
 
 const API_URL = 'http://localhost:8080';

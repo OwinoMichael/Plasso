@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet, createBrowserRouter, createRoutesFromElements, RouterProvider } from 'react-router-dom';
-import { Toaster } from 'sonner'
+import { Navigate, Outlet, createBrowserRouter, createRoutesFromElements, RouterProvider, Route } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import Home from './pages/Home';
 import Project from './pages/Project';
 import Login from './pages/Login';
@@ -32,86 +32,54 @@ const ProtectedRoute = () => {
   if (isValidating) return <div>Loading...</div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   
+  // Check if verified
+  const user = AuthService.getCurrentUser();
+  if (user && !user.verified) return <Navigate to="/unverified-email" replace />;
+  
   return <Outlet />;
 };
 
 function App() {
-  
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  
-
-  useEffect(() => {
-    const user = AuthService.getCurrentUser();
-    setIsAuthenticated(!!user);
-
-    const handleStorageChange = () => {
-      const user = AuthService.getCurrentUser();
-      setIsAuthenticated(!!user);
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []);
-
-  // ✅ Use <Outlet> instead of children for route nesting
-  const ProtectedRoute = () => {
-    const user = AuthService.getCurrentUser();
-
-    if (!user) return <Navigate to="/login" replace />;
-    if (!user.verified) return <Navigate to="/unverified-email" replace />;
-
-    return <Outlet />;
-  };
-
   const router = createBrowserRouter(
-  createRoutesFromElements(
+    createRoutesFromElements(
+      <>
+        {/* Protected routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/home" element={<Home />} />
+          <Route path="/project/:id" element={<Project onHome={function (): void {
+            throw new Error('Function not implemented.');
+          } } onToggleSidebar={function (): void {
+            throw new Error('Function not implemented.');
+          } } onToggleAI={function (): void {
+            throw new Error('Function not implemented.');
+          } } onToggleConsole={function (): void {
+            throw new Error('Function not implemented.');
+          } } showSidebar={false} showAIPanel={false} showConsole={false} />} />
+        </Route>
+
+        {/* Public routes */}
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/unverified-email" element={<Unverified />} />
+        <Route path="/verify-error" element={<EmailVerifyError />} />
+        <Route path="/verify-success" element={<EmailVerifySuccess />} />
+        <Route path="*" element={<NotFound />} />
+      </>
+    ),
+    {
+      basename: "/plasso"
+    }
+  );
+
+  return (
     <>
-      {/* ✅ Protected routes grouped under <ProtectedRoute> */}
-      <Route element={<ProtectedRoute />}>
-        <Route path="/home" element={<Home />} />
-        <Route path="/project/:id" element={<Project />} />
-      </Route>
-
-      {/* Public routes */}
-      <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<SignUp />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/unverified-email" element={<Unverified />} />
-      <Route path="/verify-error" element={<EmailVerifyError />} />
-      <Route path="/verify-success" element={<EmailVerifySuccess />} />
-      <Route path="*" element={<NotFound />} />
+      <RouterProvider router={router} />
+      <Toaster />
     </>
-  ),
-  {
-    basename: "/plasso" // This tells React Router the base path
-  }
   );
-
-  return( 
-  <><RouterProvider router={router} /><Toaster /></>
-  );
-
-
-  // return (
-  //   <BrowserRouter>
-  //     <Routes>
-  //       <Route path="/login" element={<Login />} />
-  //       <Route path="/signup" element={<SignUp />} />
-  //       <Route path="/verify-success" element={<EmailVerifySuccess />} />
-  //       <Route path="/verify-error" element={<EmailVerifyError />} />
-  //       <Route path="/unverified" element={<Unverified />} />
-  //       <Route path="/forgot-password" element={<ForgotPassword />} />
-  //       <Route path="/reset-password" element={<ResetPassword />} />
-  //       <Route path="/" element={<Home />} />
-  //       <Route path="/project/:id" element={<Project />} />
-  //       <Route path="*" element={<NotFound />} />
-  //     </Routes>
-  //   </BrowserRouter>
-  // );
 }
 
 export default App;
