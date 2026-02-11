@@ -1,0 +1,36 @@
+name: Deploy Sonic Resonance
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: root
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            
+            echo "Connected to droplet"
+
+            # === Step 1: Update code ===
+            cd /root/projects/Sonic-Resonance
+            
+            echo "Pulling latest code"
+            git pull origin main
+
+            echo "Stopping existing containers"
+            docker compose -f docker-compose.prod.yml down
+
+            echo "Rebuilding and starting containers"
+            docker compose -f docker-compose.prod.yml up -d --build
+
+            echo "Cleaning unused docker images"
+            docker image prune -f
+            
