@@ -20,7 +20,7 @@ jobs:
             echo "Connected to droplet"
 
             # === Step 1: Update code ===
-            cd /root/projects/Sonic-Resonance
+            cd /root/projects/Plasso
             
             echo "Pulling latest code"
             git pull origin main
