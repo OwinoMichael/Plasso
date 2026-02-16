@@ -163,6 +163,91 @@ class AuthService {
       });
   }
 
+  sendMagicLink(email: string) {
+    console.log('Sending magic link to:', email);
+    
+    return axios
+      .post(`${API_URL}/magic-link`, { email })
+      .then((response) => {
+        console.log('Magic link sent successfully:', response);
+        return response.data;
+      })
+      .catch((error: any) => {
+        console.error('Magic link error in AuthService:', error);
+        
+        const status = error.response?.status;
+        const errorData = error.response?.data;
+        
+        // Handle 404 - Account not found (for login attempts)
+        if (status === 404) {
+          throw new CustomError(
+            'No account found with this email',
+            'ACCOUNT_NOT_FOUND',
+            errorData
+          );
+        }
+        
+        throw error;
+      });
+  }
+
+  verifyMagicLink(token: string) {
+    console.log('Verifying magic link token');
+    
+    return axios
+      .get(`${API_URL}/verify-magic-link?token=${token}`)
+      .then((response: { 
+        data: { 
+          token: string; 
+          user: { 
+            id: string; 
+            email: string; 
+            username: string; 
+            emailVerified: boolean;
+            hasUsername: boolean;
+          } 
+        } 
+      }) => {
+        console.log('Magic link verification response:', response);
+        
+        if (response.data && response.data.token) {
+          localStorage.setItem(
+            'user',
+            JSON.stringify({
+              token: response.data.token,
+              email: response.data.user.email,
+              verified: response.data.user.emailVerified,
+              id: response.data.user.id,
+              username: response.data.user.username,
+              hasUsername: response.data.user.hasUsername
+            })
+          );
+          console.log('Magic link verification data:', response.data);
+        } else {
+          console.warn('No token found in magic link response:', response.data);
+          throw new Error('No authentication token received');
+        }
+        
+        return response.data;
+      })
+      .catch((error: any) => {
+        console.error('Magic link verification error:', error);
+        
+        const status = error.response?.status;
+        const errorData = error.response?.data;
+        
+        if (status === 400) {
+          throw new CustomError(
+            errorData?.error || 'Invalid or expired magic link',
+            'INVALID_MAGIC_LINK',
+            errorData
+          );
+        }
+        
+        throw error;
+      });
+  }
+
 
   getCurrentUser() {
     const userStr = localStorage.getItem('user');

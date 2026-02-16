@@ -37,4 +37,56 @@ public class EmailService {
         ));
         mailSender.send(message);
     }
+
+    @Async
+    public void sendMagicLinkSignup(String email, String magicLink, int expiryMinutes) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(email);
+            message.setSubject("Welcome to CodeSync - Complete Your Signup");
+            message.setText(String.format(
+                    "Welcome to CodeSync!\n\n" +
+                            "Click the link below to complete your signup and get started:\n\n" +
+                            "%s\n\n" +
+                            "This link will expire in %d minutes.\n\n" +
+                            "If you didn't request this, please ignore this email.\n\n" +
+                            "Best regards,\n" +
+                            "CodeSync Team",
+                    magicLink,
+                    expiryMinutes
+            ));
+
+            mailSender.send(message);
+            //logger.info("Magic link signup email sent to: {}", email);
+        } catch (Exception e) {
+            //logger.error("Failed to send magic link signup email to: {}", email, e);
+            throw new RuntimeException("Failed to send magic link email", e);
+        }
+    }
+
+    @Async
+    public void sendMagicLinkLogin(String email, String magicLink, int expiryMinutes) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(email);
+            message.setSubject("CodeSync - Your Login Link");
+            message.setText(String.format(
+                    "Hi there!\n\n" +
+                            "Click the link below to sign in to your CodeSync account:\n\n" +
+                            "%s\n\n" +
+                            "This link will expire in %d minutes.\n\n" +
+                            "If you didn't request this, please ignore this email and your account will remain secure.\n\n" +
+                            "Best regards,\n" +
+                            "CodeSync Team",
+                    magicLink,
+                    expiryMinutes
+            ));
+
+            mailSender.send(message);
+            //logger.info("Magic link login email sent to: {}", email);
+        } catch (Exception e) {
+            //logger.error("Failed to send magic link login email to: {}", email, e);
+            throw new RuntimeException("Failed to send magic link email", e);
+        }
+    }
 }

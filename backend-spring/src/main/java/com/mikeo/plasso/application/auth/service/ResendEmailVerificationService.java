@@ -2,21 +2,17 @@ package com.mikeo.plasso.application.auth.service;
 
 import com.mikeo.plasso.Command;
 import com.mikeo.plasso.application.auth.events.UserRegistrationEventObject;
-import com.mikeo.plasso.application.auth.model.ResendVerificationContext;
-import com.mikeo.plasso.application.auth.model.ResendVerificationRequest;
+import com.mikeo.plasso.application.auth.model.userpass.ResendVerificationContext;
+import com.mikeo.plasso.application.auth.model.userpass.ResendVerificationRequest;
 import com.mikeo.plasso.application.exceptions.ResourceNotFoundException;
 import com.mikeo.plasso.application.security.JWTUtil;
 import com.mikeo.plasso.features.users.UserRepository;
 import com.mikeo.plasso.features.users.entity.User;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.tika.exception.TikaException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.xml.sax.SAXException;
-
-import java.io.IOException;
 
 @Service
 public class ResendEmailVerificationService implements Command<ResendVerificationContext, String> {

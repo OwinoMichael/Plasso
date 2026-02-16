@@ -47,22 +47,17 @@ const SignUp = () => {
     setMagicLinkError('');
 
     try {
-      // TODO: Replace with your actual magic link service
-      // await MagicLinkService.sendSignUpLink(magicLinkEmail.trim());
-      
-      // Simulated API call - remove this in production
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await AuthService.sendMagicLink(magicLinkEmail.trim());
       setMagicLinkSent(true);
     } catch (error: any) {
       console.error("Magic link failed:", error);
-      setMagicLinkError(error.response?.data?.message || 'Failed to send magic link. Please try again.');
+      setMagicLinkError(error.response?.data?.message || error.message || 'Failed to send magic link. Please try again.');
     } finally {
       setIsMagicLinkLoading(false);
     }
   };
 
-  // Traditional Signup Handler (unchanged logic)
+  // Traditional Signup Handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     

@@ -1,4 +1,4 @@
-package com.mikeo.plasso.application.auth.model;
+package com.mikeo.plasso.application.auth.model.userpass;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

@@ -44,27 +44,22 @@ const Login = () => {
     setMagicLinkError('');
 
     try {
-      // TODO: Replace with your actual magic link service
-      // await MagicLinkService.sendLoginLink(magicLinkEmail.trim());
-      
-      // Simulated API call - remove this in production
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await AuthService.sendMagicLink(magicLinkEmail.trim());
       setMagicLinkSent(true);
     } catch (error: any) {
       console.error("Magic link failed:", error);
       
-      if (error.response?.status === 404) {
+      if (error.name === 'ACCOUNT_NOT_FOUND') {
         setMagicLinkError('No account found with this email. Please sign up first.');
       } else {
-        setMagicLinkError(error.response?.data?.message || 'Failed to send magic link. Please try again.');
+        setMagicLinkError(error.response?.data?.message || error.message || 'Failed to send magic link. Please try again.');
       }
     } finally {
       setIsMagicLinkLoading(false);
     }
   };
 
-  // Traditional Login Handler (unchanged logic)
+  // Traditional Login Handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     

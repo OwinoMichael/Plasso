@@ -1,26 +1,20 @@
 package com.mikeo.plasso.application.auth.service;
 
 import com.mikeo.plasso.Command;
-import com.mikeo.plasso.application.auth.model.LoginRequest;
+import com.mikeo.plasso.application.auth.model.userpass.LoginRequest;
 import com.mikeo.plasso.application.security.JWTUtil;
 import com.mikeo.plasso.features.users.UserRepository;
 import com.mikeo.plasso.features.users.entity.User;
 import org.apache.poi.ss.formula.functions.T;
-import org.apache.tika.exception.TikaException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.xml.sax.SAXException;
 
-import java.io.IOException;
 import java.util.Map;
 
 @Service

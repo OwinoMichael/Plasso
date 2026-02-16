@@ -1,8 +1,9 @@
 package com.mikeo.plasso.application.auth.service;
 
 import com.mikeo.plasso.Command;
+import com.mikeo.plasso.application.auth.ValidationGroups;
 import com.mikeo.plasso.application.auth.events.UserRegistrationEventObject;
-import com.mikeo.plasso.application.auth.model.UserRegistrationRequest;
+import com.mikeo.plasso.application.auth.model.userpass.UserRegistrationRequest;
 import com.mikeo.plasso.application.security.JWTUtil;
 import com.mikeo.plasso.features.users.UserRepository;
 import com.mikeo.plasso.features.users.entity.User;
@@ -15,8 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
-import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
@@ -39,7 +40,7 @@ public class RegistrationService implements Command<UserRegistrationRequest, T> 
 
 
     @Override
-    public ResponseEntity execute(UserRegistrationRequest request) {
+    public ResponseEntity execute(@Validated(ValidationGroups.TraditionalSignup.class)UserRegistrationRequest request) {
         try {
 
             logger.info("Registration request received - Username: {}, Email: {}",
