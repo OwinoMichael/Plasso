@@ -181,7 +181,6 @@ public class MagicLinkService implements Command<MagicLinkRequest, MagicLinkResp
     }
 
     private String buildMagicLink(String token) {
-        // TODO: Replace with your actual frontend URL
         String frontendUrl = System.getenv().getOrDefault(FRONTEND_URL, "http://localhost:5173");
         return frontendUrl + "/plasso/auth/verify-magic-link?token=" + token;
     }
