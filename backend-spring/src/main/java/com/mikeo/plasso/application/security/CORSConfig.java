@@ -17,6 +17,9 @@ public class CORSConfig {
         config.addAllowedOrigin("http://localhost:5173");
         config.addAllowedOrigin("http://localhost:3000");
 
+        config.addAllowedOrigin("https://mikeowino.cloud");
+        config.addAllowedOrigin("https://www.mikeowino.cloud");
+
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         config.setAllowCredentials(true);
