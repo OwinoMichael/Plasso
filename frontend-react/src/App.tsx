@@ -13,6 +13,8 @@ import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 import AuthService from './services/AuthService';
 import Landing from './pages/Landing';
+import VerifyMagicLink from './pages/Verifymagiclink';
+import SetupUsername from './pages/Setupusername';
 
 
 const ProtectedRoute = () => {
@@ -62,6 +64,9 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/auth/verify-magic-link" element={<VerifyMagicLink />} />
+        <Route path="/setup-username" element={<SetupUsername />} />
+        
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/unverified-email" element={<Unverified />} />
         <Route path="/verify-error" element={<EmailVerifyError />} />

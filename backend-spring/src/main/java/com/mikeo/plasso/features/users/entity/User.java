@@ -1,5 +1,6 @@
 package com.mikeo.plasso.features.users.entity;
 
+import com.mikeo.plasso.application.auth.ValidationGroups;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -18,25 +19,16 @@ public class User extends AuditableEntity {
     @Column(columnDefinition = "VARCHAR(36)")
     private String id;
 
-    @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
-    @Pattern(
-            regexp = "^[a-z][a-z0-9_]{2,19}$",
-            message = "Username must start with a letter and contain only lowercase letters, numbers, and underscores"
-    )
-    @Column(name = "username", nullable = false, unique = true, length = 20)
+    // NO VALIDATION ANNOTATIONS - just column definition
+    @Column(name = "username", nullable = true, unique = true, length = 20)
     private String username;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Please provide a valid email address")
+    // NO VALIDATION ANNOTATIONS
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must be at least 8 characters long")
-    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$",
-            message = "Password must contain at least one digit, one lowercase, one uppercase, one special character, and no whitespace")
-    @Column(name = "password_hash")
+    // NO VALIDATION ANNOTATIONS
+    @Column(name = "password_hash", nullable = true)
     private String password;
 
     @Column(name = "email_verified", nullable = false)

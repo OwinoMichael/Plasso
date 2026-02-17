@@ -1,4 +1,4 @@
-package com.mikeo.plasso.application.auth.model;
+package com.mikeo.plasso.application.auth.model.userpass;
 
 import jakarta.servlet.http.HttpServletRequest;
 

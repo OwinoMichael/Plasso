@@ -20,6 +20,18 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         this.jwtUtil = jwtUtil;
     }
 
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        // Skip JWT filter for public endpoints
+        return path.equals("/login") ||
+                path.equals("/createNewUser") ||
+                path.equals("/verify") ||
+                path.equals("/magic-link") ||
+                path.equals("/verify-magic-link") ||
+                path.equals("/resend-verification");
+    }
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
