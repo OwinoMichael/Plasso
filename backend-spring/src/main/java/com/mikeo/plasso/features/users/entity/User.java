@@ -19,24 +19,15 @@ public class User extends AuditableEntity {
     @Column(columnDefinition = "VARCHAR(36)")
     private String id;
 
-    @NotBlank(message = "Username is required", groups = ValidationGroups.TraditionalSignup.class) //email-password
-    @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
-    @Pattern(
-            regexp = "^[a-z][a-z0-9_]{2,19}$",
-            message = "Username must start with a letter and contain only lowercase letters, numbers, and underscores"
-    )
+    // NO VALIDATION ANNOTATIONS - just column definition
     @Column(name = "username", nullable = true, unique = true, length = 20)
     private String username;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Please provide a valid email address")
+    // NO VALIDATION ANNOTATIONS
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @NotBlank(message = "Password is required", groups = ValidationGroups.TraditionalSignup.class) //email-password
-    @Size(min = 8, message = "Password must be at least 8 characters long")
-    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$",
-            message = "Password must contain at least one digit, one lowercase, one uppercase, one special character, and no whitespace")
+    // NO VALIDATION ANNOTATIONS
     @Column(name = "password_hash", nullable = true)
     private String password;
 

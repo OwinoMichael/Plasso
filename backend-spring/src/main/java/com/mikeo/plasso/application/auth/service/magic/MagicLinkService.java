@@ -1,4 +1,4 @@
-package com.mikeo.plasso.application.auth.service;
+package com.mikeo.plasso.application.auth.service.magic;
 
 import com.mikeo.plasso.Command;
 import com.mikeo.plasso.application.auth.MagicLinkTokenRepository;

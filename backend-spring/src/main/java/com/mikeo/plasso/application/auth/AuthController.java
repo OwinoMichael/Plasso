@@ -9,6 +9,8 @@ import com.mikeo.plasso.application.auth.model.userpass.ResendVerificationReques
 import com.mikeo.plasso.application.auth.model.userpass.UserRegistrationRequest;
 import com.mikeo.plasso.application.auth.service.*;
 
+import com.mikeo.plasso.application.auth.service.magic.MagicLinkService;
+import com.mikeo.plasso.application.auth.service.magic.UpdateUsernameService;
 import com.mikeo.plasso.application.security.JWTUtil;
 import com.mikeo.plasso.features.users.UserRepository;
 import com.mikeo.plasso.features.users.entity.User;
@@ -20,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.xml.sax.SAXException;
 
@@ -55,7 +58,7 @@ public class AuthController {
     }
 
     @PostMapping("/createNewUser")
-    public ResponseEntity<?> createNewUser(@Valid @RequestBody UserRegistrationRequest request) {
+    public ResponseEntity<?> createNewUser(@Validated(ValidationGroups.TraditionalSignup.class) @Valid @RequestBody UserRegistrationRequest request) {
         try {
             return registrationService.execute(request);
         } catch (Exception e) {
