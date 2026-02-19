@@ -34,6 +34,8 @@ services:
       DB_PASS: ${DB_PASS}
       BACKEND_URL: ${VITE_API_URL}
       FRONTEND_URL: ${FRONTEND_URL}
+      JWT_SECRET: ${JWT_SECRET}              # Add this
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
       # Add any other environment variables your app needs
     depends_on:
       db:
