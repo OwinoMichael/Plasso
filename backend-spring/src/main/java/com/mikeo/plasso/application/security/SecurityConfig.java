@@ -50,6 +50,8 @@ public class SecurityConfig {
                     CorsConfiguration config = new CorsConfiguration();
                     config.addAllowedOrigin("http://localhost:5173"); // Vite default
                     config.addAllowedOrigin("http://localhost:3000"); // React default
+                    config.addAllowedOrigin("https://mikeowino.cloud");
+                    config.addAllowedOrigin("http://mikeowino.cloud");
                     config.addAllowedHeader("*");
                     config.addAllowedMethod("*");
                     config.setAllowCredentials(true);
