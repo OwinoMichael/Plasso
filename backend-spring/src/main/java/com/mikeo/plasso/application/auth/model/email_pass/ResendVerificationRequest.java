@@ -1,4 +1,4 @@
-package com.mikeo.plasso.application.auth.model.userpass;
+package com.mikeo.plasso.application.auth.model.email_pass;
 
 public class ResendVerificationRequest {
     private String email;

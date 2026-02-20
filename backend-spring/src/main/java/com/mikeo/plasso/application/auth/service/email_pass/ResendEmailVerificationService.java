@@ -1,9 +1,10 @@
-package com.mikeo.plasso.application.auth.service;
+package com.mikeo.plasso.application.auth.service.email_pass;
 
 import com.mikeo.plasso.Command;
 import com.mikeo.plasso.application.auth.events.UserRegistrationEventObject;
-import com.mikeo.plasso.application.auth.model.userpass.ResendVerificationContext;
-import com.mikeo.plasso.application.auth.model.userpass.ResendVerificationRequest;
+import com.mikeo.plasso.application.auth.model.email_pass.ResendVerificationContext;
+import com.mikeo.plasso.application.auth.model.email_pass.ResendVerificationRequest;
+import com.mikeo.plasso.application.auth.service.RateLimitService;
 import com.mikeo.plasso.application.exceptions.ResourceNotFoundException;
 import com.mikeo.plasso.application.security.JWTUtil;
 import com.mikeo.plasso.features.users.UserRepository;

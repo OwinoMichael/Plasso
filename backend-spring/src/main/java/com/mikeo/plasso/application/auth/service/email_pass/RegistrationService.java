@@ -1,9 +1,9 @@
-package com.mikeo.plasso.application.auth.service;
+package com.mikeo.plasso.application.auth.service.email_pass;
 
 import com.mikeo.plasso.Command;
 import com.mikeo.plasso.application.auth.ValidationGroups;
 import com.mikeo.plasso.application.auth.events.UserRegistrationEventObject;
-import com.mikeo.plasso.application.auth.model.userpass.UserRegistrationRequest;
+import com.mikeo.plasso.application.auth.model.email_pass.UserRegistrationRequest;
 import com.mikeo.plasso.application.security.JWTUtil;
 import com.mikeo.plasso.features.users.UserRepository;
 import com.mikeo.plasso.features.users.entity.User;

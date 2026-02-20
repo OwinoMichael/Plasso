@@ -1,4 +1,4 @@
-package com.mikeo.plasso.application.auth.service;
+package com.mikeo.plasso.application.auth.service.email_pass;
 
 import com.mikeo.plasso.application.exceptions.ResourceNotFoundException;
 import com.mikeo.plasso.features.users.UserRepository;
