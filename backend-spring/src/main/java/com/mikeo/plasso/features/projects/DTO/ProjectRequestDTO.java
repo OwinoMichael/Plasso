@@ -1,4 +1,4 @@
-package com.mikeo.plasso.features.projects.entity;
+package com.mikeo.plasso.features.projects.DTO;
 
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotBlank;

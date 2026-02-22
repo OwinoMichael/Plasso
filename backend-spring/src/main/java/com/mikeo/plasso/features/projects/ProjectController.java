@@ -1,18 +1,10 @@
 package com.mikeo.plasso.features.projects;
 
-import com.mikeo.plasso.features.projects.entity.Project;
-import com.mikeo.plasso.features.projects.entity.ProjectRequestDTO;
-import com.mikeo.plasso.features.projects.entity.ProjectResponseDTO;
+import com.mikeo.plasso.features.projects.DTO.ProjectRequestDTO;
+import com.mikeo.plasso.features.projects.DTO.ProjectResponseDTO;
 import com.mikeo.plasso.features.projects.handleCommands.CreateProject;
-import com.mikeo.plasso.features.projects.handleQueries.GetAllProjects;
-import com.mikeo.plasso.features.projects.handleQueries.GetProject;
-import com.mikeo.plasso.features.projects.handleQueries.UserProjectQueryParams;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/projects")

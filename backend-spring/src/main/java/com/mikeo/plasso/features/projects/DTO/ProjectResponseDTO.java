@@ -1,4 +1,4 @@
-package com.mikeo.plasso.features.projects.entity;
+package com.mikeo.plasso.features.projects.DTO;
 
 public class ProjectResponseDTO {
 
