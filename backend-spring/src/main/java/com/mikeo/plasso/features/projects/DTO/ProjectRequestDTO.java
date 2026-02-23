@@ -7,8 +7,6 @@ import jakarta.validation.constraints.Size;
 
 public class ProjectRequestDTO {
 
-    @NotNull(message = "User ID is required")
-    private String userId;
 
     @NotBlank
     @Size(max = 100)
@@ -24,7 +22,7 @@ public class ProjectRequestDTO {
     private String language;
 
     @Column(name = "is_public", nullable = false)
-    private boolean publicProject = false;
+    private boolean isPublic = false;
 
     @Column(name = "auto_generate", nullable = false)
     private boolean autoGenerate = true;
@@ -32,22 +30,16 @@ public class ProjectRequestDTO {
     public ProjectRequestDTO() {
     }
 
-    public ProjectRequestDTO(boolean autoGenerate, String description, String language, String name, boolean publicProject, String userId) {
+    public ProjectRequestDTO(boolean autoGenerate, String description, String language, String name, boolean isPublic ) {
         this.autoGenerate = autoGenerate;
         this.description = description;
         this.language = language;
         this.name = name;
-        this.publicProject = publicProject;
-        this.userId = userId;
+        this.isPublic = isPublic;
+
     }
 
-    public @NotNull(message = "User ID is required") String getUserId() {
-        return userId;
-    }
 
-    public void setUserId(@NotNull(message = "User ID is required") String userId) {
-        this.userId = userId;
-    }
 
     public @NotBlank @Size(max = 100) String getName() {
         return name;
@@ -73,19 +65,19 @@ public class ProjectRequestDTO {
         this.language = language;
     }
 
-    public boolean isPublicProject() {
-        return publicProject;
-    }
-
-    public void setPublicProject(boolean publicProject) {
-        this.publicProject = publicProject;
-    }
-
     public boolean isAutoGenerate() {
         return autoGenerate;
     }
 
     public void setAutoGenerate(boolean autoGenerate) {
         this.autoGenerate = autoGenerate;
+    }
+
+    public boolean isPublic() {
+        return isPublic;
+    }
+
+    public void setPublic(boolean aPublic) {
+        isPublic = aPublic;
     }
 }

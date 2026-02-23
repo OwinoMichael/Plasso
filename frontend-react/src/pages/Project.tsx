@@ -1,84 +1,60 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Terminal, Home, Upload, Download, Share2, Sparkles, Play, PanelLeft, PanelRight, PanelBottom } from 'lucide-react';
+import AIPanel from "@/components/AIPanel";
+import Console from "@/components/Console";
+import Editor from "@/components/Editor";
+import Navbar from "@/components/Navbar";
+import Sidebar from "@/components/Sidebar";
 
-interface NavbarProps {
-  projectName?: string;
-  onHome: () => void;
-  onToggleSidebar: () => void;
-  onToggleAI: () => void;
-  onToggleConsole: () => void;
-  showSidebar: boolean;
-  showAIPanel: boolean;
-  showConsole: boolean;
-}
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
-const Navbar: React.FC<NavbarProps> = ({ 
-  projectName, 
-  onHome, 
-  onToggleSidebar,
-  onToggleAI, 
-  onToggleConsole,
-  showSidebar,
-  showAIPanel,
-  showConsole 
-}) => {
+// pages/Project.tsx
+const Project = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string>('');
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [showAIPanel, setShowAIPanel] = useState(true);
+  const [showConsole, setShowConsole] = useState(true);
+
+  const handleFileSelect = (fileId: string, fileName: string) => {
+    setSelectedFileId(fileId);
+    setSelectedFileName(fileName);
+  };
+
   return (
-    <div className="h-14 border-b border-border flex items-center justify-between px-4">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={onHome}>
-          <Home className="w-4 h-4" />
-        </Button>
-        <div className="flex items-center gap-2">
-          <Terminal className="w-6 h-6 text-primary" />
-          <span className="text-xl font-bold">CodeSync</span>
+    <div className="h-screen flex flex-col bg-background">
+      <Navbar 
+        projectName={`Project ${id || 'New'}`}
+        onHome={() => navigate('/home')}
+        onToggleSidebar={() => setShowSidebar(!showSidebar)}
+        onToggleAI={() => setShowAIPanel(!showAIPanel)}
+        onToggleConsole={() => setShowConsole(!showConsole)}
+        showSidebar={showSidebar}
+        showAIPanel={showAIPanel}
+        showConsole={showConsole}
+      />
+
+      <div className="flex-1 flex overflow-hidden">
+        {showSidebar && id && (
+          <Sidebar 
+            projectId={id}
+            selectedFile={selectedFileId}
+            onFileSelect={handleFileSelect}
+            onClose={() => setShowSidebar(false)}
+          />
+        )}
+
+        <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex">
+            <Editor selectedFile={selectedFileName} />
+            {showAIPanel && <AIPanel onClose={() => setShowAIPanel(false)} />}
+          </div>
+          {showConsole && <Console onClose={() => setShowConsole(false)} />}
         </div>
-        <span className="text-sm text-muted-foreground">Project: {projectName}</span>
-      </div>
-      
-      <div className="flex items-center gap-2">
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={onToggleSidebar}
-          className={showSidebar ? 'text-primary' : ''}
-        >
-          <PanelLeft className="w-4 h-4" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={onToggleConsole}
-          className={showConsole ? 'text-primary' : ''}
-        >
-          <PanelBottom className="w-4 h-4" />
-        </Button>
-        <div className="w-px h-6 bg-border mx-1"></div>
-        <Button variant="ghost" size="sm">
-          <Upload className="w-4 h-4" />
-        </Button>
-        <Button variant="ghost" size="sm">
-          <Download className="w-4 h-4" />
-        </Button>
-        <Button variant="ghost" size="sm">
-          <Share2 className="w-4 h-4" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={onToggleAI}
-          className={showAIPanel ? 'text-primary' : ''}
-        >
-          <Sparkles className="w-4 h-4 mr-2" />
-          AI Review
-        </Button>
-        <Button variant="default" size="sm">
-          <Play className="w-4 h-4 mr-2" />
-          Run Code
-        </Button>
       </div>
     </div>
   );
 };
 
-export default Navbar;
+export default Project; 

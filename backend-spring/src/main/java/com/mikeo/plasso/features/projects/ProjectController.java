@@ -28,6 +28,8 @@ public class ProjectController {
         this.getAllProjects = getAllProjects;
     }
 
+    public record CreateProjectCommand(String id, ProjectRequestDTO projectRequestDTO){}
+
     @GetMapping("/")
     public ResponseEntity<Page<ProjectResponseDTO>> getAllProjects(
             @RequestParam String userId,
@@ -63,9 +65,9 @@ public class ProjectController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        project.setUserId(userId);
+        CreateProjectCommand projectCommand = new CreateProjectCommand(userId, project);
 
-        return createProject.execute(project);
+        return createProject.execute(projectCommand);
     }
 
 }

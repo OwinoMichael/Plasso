@@ -1,10 +1,92 @@
 package com.mikeo.plasso.features.files;
 
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.mikeo.plasso.features.files.DTO.CreateFileRequest;
+import com.mikeo.plasso.features.files.DTO.CreateFolderRequest;
+import com.mikeo.plasso.features.files.DTO.FileResponseDTO;
+import com.mikeo.plasso.features.files.DTO.FileTreeResponse;
+import com.mikeo.plasso.features.files.hCommands.CreateFile;
+import com.mikeo.plasso.features.files.hCommands.CreateFolder;
+import com.mikeo.plasso.features.files.hCommands.DeleteFile;
+import com.mikeo.plasso.features.files.hQueries.GetFileTree;
+import jakarta.servlet.http.HttpServletRequest;
+
+import org.springframework.data.util.Pair;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
-@RequestMapping("/files")
+@RequestMapping("projects/{projectsId}/files")
 public class FileController {
+
+    private final CreateFolder createFolder;
+    private final CreateFile createFile;
+    private final DeleteFile deleteFile;
+    private final GetFileTree fileTree;
+
+    public FileController(CreateFile createFile, CreateFolder createFolder, DeleteFile deleteFile, GetFileTree fileTree) {
+        this.createFile = createFile;
+        this.createFolder = createFolder;
+        this.deleteFile = deleteFile;
+        this.fileTree = fileTree;
+    }
+
+    public record CreateFileCommand(String userId, String projectId, CreateFileRequest request) {}
+    public record CreateFolderCommand(String userId, String projectId, CreateFolderRequest request) {}
+    public record DeleteFileCommand(String userId, String projectId, String fileId) {}
+
+    @GetMapping("/file-tree")
+    public ResponseEntity<List<FileTreeResponse>> getFileTree(
+            @PathVariable String projectsId,
+            HttpServletRequest httpRequest
+    ){
+
+        String userId = (String) httpRequest.getAttribute("userId");
+        Pair<String, String> pairOfIds = Pair.of(userId, projectsId);
+
+        return fileTree.execute(pairOfIds);
+    }
+
+    @PostMapping("/create-file")
+    public ResponseEntity<FileResponseDTO> createFile(
+            @PathVariable String projectsId,
+            @RequestBody CreateFileRequest createFileRequest,
+            HttpServletRequest httpRequest
+            ){
+
+        String userId = (String) httpRequest.getAttribute("userId");
+
+        CreateFileCommand fileCommand = new CreateFileCommand(userId, projectsId, createFileRequest);
+
+        return createFile.execute(fileCommand);
+
+    }
+
+    @PostMapping("/create-folder")
+    public ResponseEntity<FileResponseDTO> createFolder(
+            @PathVariable String projectsId,
+            @RequestBody CreateFolderRequest createFolderRequest,
+            HttpServletRequest httpRequest
+    ){
+        String userId = (String) httpRequest.getAttribute("userId");
+
+        CreateFolderCommand folderCommand = new CreateFolderCommand(userId, projectsId, createFolderRequest);
+
+        return createFolder.execute(folderCommand);
+    }
+
+    @DeleteMapping("/{fileId}")
+    public ResponseEntity<Void> deleteFile(
+            @PathVariable String projectsId,
+            @PathVariable String fileId,
+            HttpServletRequest httpRequest
+    ){
+        String userId = (String) httpRequest.getAttribute("userId");
+
+        DeleteFileCommand deleteFileCommand = new DeleteFileCommand(userId, projectsId, fileId);
+
+        return deleteFile.execute(deleteFileCommand);
+    }
 }

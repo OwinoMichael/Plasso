@@ -2,14 +2,11 @@ package com.mikeo.plasso.features.files.DTO;
 
 import com.mikeo.plasso.features.files.entity.ProjectFile;
 import com.mikeo.plasso.features.projects.entity.Project;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class fileResponseDTO {
+public class FileResponseDTO {
 
     private String id;
 
@@ -32,10 +29,10 @@ public class fileResponseDTO {
     //private String createdBy;
     //private String updatedBy;
 
-    public fileResponseDTO() {
+    public FileResponseDTO() {
     }
 
-    public fileResponseDTO(List<ProjectFile> children, String content, boolean folder, String id, String language, boolean mainFile, String name, ProjectFile parent, Project project) {
+    public FileResponseDTO(List<ProjectFile> children, String content, boolean folder, String id, String language, boolean mainFile, String name, ProjectFile parent, Project project) {
         this.children = children;
         this.content = content;
         this.folder = folder;
@@ -47,7 +44,7 @@ public class fileResponseDTO {
         this.project = project;
     }
 
-    public fileResponseDTO(String name, ProjectFile parent, Project project) {
+    public FileResponseDTO(String name, ProjectFile parent, Project project) {
         this.name = name;
         this.parent = parent;
         this.project = project;
