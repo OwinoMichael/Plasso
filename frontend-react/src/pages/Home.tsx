@@ -15,6 +15,7 @@ import ProjectCard from '../components/ProjectCard';
 import StatCard from '../components/StatCard';
 import AuthService from '@/services/AuthService';
 import axios from '@/services/auth-header';
+import CreateProjectDialog from './CreateProjectDialog';
 
 const API_URL = import.meta.env.REACT_APP_API_URL || 'http://localhost:8080';
 
@@ -25,6 +26,7 @@ interface Project {
   collaborators: number;
   language: string;
 }
+
 
 const Home = () => {
   const navigate = useNavigate();
@@ -168,10 +170,7 @@ const Home = () => {
               <h1 className="text-3xl font-bold mb-2">Your Projects</h1>
               <p className="text-muted-foreground">Collaborate in real-time with your team</p>
             </div>
-            <Button className="gap-2" onClick={() => navigate('/project/new')}>
-              <Plus className="w-4 h-4" />
-              New Project
-            </Button>
+            <CreateProjectDialog onProjectCreated={fetchProjects} />
           </div>
 
           {/* Quick Stats */}
@@ -219,10 +218,15 @@ const Home = () => {
                     <FileCode className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-xl font-semibold mb-2">No projects yet</h3>
                     <p className="text-muted-foreground mb-4">Create your first project to get started</p>
-                    <Button onClick={() => navigate('/project/new')}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create Project
-                    </Button>
+                    <CreateProjectDialog 
+                      trigger={
+                        <Button>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Create Project
+                        </Button>
+                      }
+                      onProjectCreated={fetchProjects}
+                    />
                   </div>
                 ) : (
                   <>

@@ -53,7 +53,18 @@ public class ProjectController {
     }
 
     @PostMapping("/create-project")
-    public ResponseEntity<ProjectResponseDTO> createProject(@RequestBody ProjectRequestDTO project){
+    public ResponseEntity<ProjectResponseDTO> createProject(@RequestBody ProjectRequestDTO project, HttpServletRequest request){
+
+        // Get userId from JWT
+        String userId = (String) request.getAttribute("userId");
+
+
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        project.setUserId(userId);
+
         return createProject.execute(project);
     }
 

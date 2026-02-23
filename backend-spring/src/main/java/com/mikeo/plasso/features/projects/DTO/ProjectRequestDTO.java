@@ -26,15 +26,19 @@ public class ProjectRequestDTO {
     @Column(name = "is_public", nullable = false)
     private boolean publicProject = false;
 
+    @Column(name = "auto_generate", nullable = false)
+    private boolean autoGenerate = true;
+
     public ProjectRequestDTO() {
     }
 
-    public ProjectRequestDTO(String userId, String name, String description, String language, boolean publicProject) {
-        this.userId = userId;
-        this.name = name;
+    public ProjectRequestDTO(boolean autoGenerate, String description, String language, String name, boolean publicProject, String userId) {
+        this.autoGenerate = autoGenerate;
         this.description = description;
         this.language = language;
+        this.name = name;
         this.publicProject = publicProject;
+        this.userId = userId;
     }
 
     public @NotNull(message = "User ID is required") String getUserId() {
@@ -75,5 +79,13 @@ public class ProjectRequestDTO {
 
     public void setPublicProject(boolean publicProject) {
         this.publicProject = publicProject;
+    }
+
+    public boolean isAutoGenerate() {
+        return autoGenerate;
+    }
+
+    public void setAutoGenerate(boolean autoGenerate) {
+        this.autoGenerate = autoGenerate;
     }
 }
