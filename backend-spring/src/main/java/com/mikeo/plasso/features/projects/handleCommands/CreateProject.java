@@ -58,6 +58,8 @@ public class CreateProject implements Command<ProjectRequestDTO, ProjectResponse
         projectResponseDTO.setName(project.getName());
         projectResponseDTO.setDescription(project.getDescription());
         projectResponseDTO.setLanguage(project.getLanguage());
+        projectResponseDTO.setCreatedAt(project.getCreatedAt());
+        projectResponseDTO.setUpdatedAt(project.getUpdatedAt());
 
         return projectResponseDTO;
     }

@@ -128,7 +128,7 @@ public class AuthController {
             String token = authHeader.replace("Bearer ", "");
 
             // Extract email from token (since username might be null/email at this point)
-            String subject = jwtUtil.extractUsername(token);
+            String subject = jwtUtil.extractUserEmail(token);
 
             // Find user by subject (could be email or username)
             Optional<User> userOpt = userRepository.findByUsername(subject);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,51 +10,109 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Terminal, Settings, Plus, FolderPlus, Users, Sparkles, FileCode, Clock, Star, LogOut, User } from 'lucide-react';
+import { Terminal, Settings, Plus, FolderPlus, Users, Sparkles, FileCode, Clock, Star, LogOut, User, Loader2 } from 'lucide-react';
 import ProjectCard from '../components/ProjectCard';
 import StatCard from '../components/StatCard';
 import AuthService from '@/services/AuthService';
+import axios from '@/services/auth-header';
+
+const API_URL = import.meta.env.REACT_APP_API_URL || 'http://localhost:8080';
+
+interface Project {
+  id: string;
+  name: string;
+  lastModified: string;
+  collaborators: number;
+  language: string;
+}
 
 const Home = () => {
   const navigate = useNavigate();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalProjects, setTotalProjects] = useState(0);
 
-  const projects = [
-    { id: '1', name: 'React Dashboard', lastModified: '2 hours ago', collaborators: 3, language: 'TypeScript' },
-    { id: '2', name: 'Python API', lastModified: '1 day ago', collaborators: 2, language: 'Python' },
-    { id: '3', name: 'ML Model Training', lastModified: '3 days ago', collaborators: 1, language: 'Python' },
-    { id: '4', name: 'Node Backend', lastModified: '5 days ago', collaborators: 4, language: 'JavaScript' }
-  ];
+  useEffect(() => {
+    fetchProjects();
+  }, [page]);
+
+  const fetchProjects = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const user = AuthService.getCurrentUser();
+      
+      if (!user || !user.id) {
+        navigate('/login');
+        return;
+      }
+
+      const response = await axios.get(`${API_URL}/projects/`, {
+        params: {
+          userId: user.id,
+          page: page,
+          size: 10,
+          sortBy: 'updatedAt',
+          sortDirection: 'DESC'
+        }
+      });
+
+      // Map backend response to frontend format
+      const mappedProjects = response.data.content.map((project: any) => ({
+        id: project.id,
+        name: project.name,
+        lastModified: formatDate(project.updatedAt),
+        collaborators: project.collaborators?.length || 0,
+        language: project.language || 'Unknown'
+      }));
+
+      setProjects(mappedProjects);
+      setTotalPages(response.data.totalPages);
+      setTotalProjects(response.data.totalElements);
+    } catch (error: any) {
+      console.error('Error fetching projects:', error);
+      setError('Failed to load projects. Please try again.');
+      
+      // If unauthorized, redirect to login
+      if (error.response?.status === 401) {
+        AuthService.logout();
+        navigate('/login');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString();
+  };
 
   const handleLogout = () => {
     try {
-      // Call AuthService logout to clear tokens/user data
       AuthService.logout();
-      
-      // Clear any additional local storage items if needed
       localStorage.removeItem('authToken');
       localStorage.removeItem('refreshToken');
-      sessionStorage.clear(); // Optional: clear session storage
+      sessionStorage.clear();
       
-      // Clear any application state if using context/Redux
-      // Example: clearUserContext(); 
-      
-      // Show logout message (optional)
       console.log('Logged out successfully');
-      
-      // Redirect to login page with replace to prevent going back
       navigate('/login', { replace: true });
-      
-      // Optional: Show success toast/notification
-      // toast.success('Logged out successfully');
-      
     } catch (error) {
       console.error('Logout error:', error);
-      
-      // Still redirect to login even if logout fails
       navigate('/login', { replace: true });
-      
-      // Optional: Show error toast
-      // toast.error('Error during logout');
     }
   };
 
@@ -120,7 +178,7 @@ const Home = () => {
           <div className="grid grid-cols-3 gap-4">
             <StatCard 
               label="Total Projects" 
-              value={projects.length} 
+              value={totalProjects} 
               icon={<FolderPlus className="w-4 h-4 text-muted-foreground" />} 
             />
             <StatCard 
@@ -145,15 +203,65 @@ const Home = () => {
               </TabsList>
               
               <TabsContent value="all" className="mt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  {projects.map(project => (
-                    <ProjectCard 
-                      key={project.id} 
-                      project={project}
-                      onClick={() => navigate(`/project/${project.id}`)}
-                    />
-                  ))}
-                </div>
+                {loading ? (
+                  <div className="flex items-center justify-center py-20">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  </div>
+                ) : error ? (
+                  <div className="text-center py-20">
+                    <p className="text-red-500 mb-4">{error}</p>
+                    <Button onClick={fetchProjects} variant="outline">
+                      Try Again
+                    </Button>
+                  </div>
+                ) : projects.length === 0 ? (
+                  <div className="text-center py-20">
+                    <FileCode className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">No projects yet</h3>
+                    <p className="text-muted-foreground mb-4">Create your first project to get started</p>
+                    <Button onClick={() => navigate('/project/new')}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Project
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      {projects.map(project => (
+                        <ProjectCard 
+                          key={project.id} 
+                          project={project}
+                          onClick={() => navigate(`/project/${project.id}`)}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-center gap-2 mt-6">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          disabled={page === 0}
+                          onClick={() => setPage(page - 1)}
+                        >
+                          Previous
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                          Page {page + 1} of {totalPages}
+                        </span>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          disabled={page === totalPages - 1}
+                          onClick={() => setPage(page + 1)}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                )}
               </TabsContent>
               
               <TabsContent value="recent" className="mt-4">

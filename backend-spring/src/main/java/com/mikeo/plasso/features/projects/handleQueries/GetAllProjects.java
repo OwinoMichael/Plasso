@@ -64,6 +64,8 @@ public class GetAllProjects implements Query<UserProjectQueryParams, Page<Projec
         projectResponseDTO.setName(project.getName());
         projectResponseDTO.setDescription(project.getDescription());
         projectResponseDTO.setLanguage(project.getLanguage());
+        projectResponseDTO.setCreatedAt(project.getCreatedAt());
+        projectResponseDTO.setUpdatedAt(project.getUpdatedAt());
 
         return projectResponseDTO;
     }

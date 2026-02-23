@@ -38,7 +38,7 @@ public class EmailVerificationService implements Command<String, String> {
             return new ResponseEntity<>(headers, HttpStatus.FOUND); // 302 redirect
         }
 
-        String email = jwtUtil.extractUsername(token);
+        String email = jwtUtil.extractUserEmail(token);
         User user = userRepository.findUsersByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 

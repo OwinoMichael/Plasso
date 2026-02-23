@@ -67,7 +67,7 @@ public class RegistrationService implements Command<UserRegistrationRequest, T> 
             User savedUser = usersRepository.save(user);
 
             // Generate verification token
-            String verificationToken = jwtUtil.generateToken(savedUser.getEmail());
+            String verificationToken = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getId());
             eventPublisher.publishEvent(new UserRegistrationEventObject(savedUser.getEmail(), verificationToken));
 
             return ResponseEntity.status(HttpStatus.CREATED)

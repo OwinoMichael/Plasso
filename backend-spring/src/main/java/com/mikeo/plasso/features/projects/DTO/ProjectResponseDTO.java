@@ -1,20 +1,42 @@
 package com.mikeo.plasso.features.projects.DTO;
 
+import java.time.Instant;
+
 public class ProjectResponseDTO {
 
     private String id;
     private String name;
     private String description;
     private String language;
+    private Instant createdAt;
+    private Instant updatedAt;
 
     public ProjectResponseDTO() {
     }
 
-    public ProjectResponseDTO(String id, String name, String description, String language) {
+    public ProjectResponseDTO(String id, String name, String description, String language, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.language = language;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
     }
 
     public String getId() {

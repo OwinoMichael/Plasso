@@ -150,7 +150,7 @@ public class MagicLinkService implements Command<MagicLinkRequest, MagicLinkResp
                     ? user.getUsername()
                     : user.getEmail();
 
-            String jwtToken = jwtUtil.generateToken(jwtSubject);
+            String jwtToken = jwtUtil.generateToken(user.getEmail(), user.getId());
 
             // Build response
             Map<String, Object> response = new HashMap<>();

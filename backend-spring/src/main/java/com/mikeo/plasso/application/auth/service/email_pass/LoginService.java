@@ -75,13 +75,15 @@ public class LoginService implements Command<LoginRequest, T> {
             );
 
             // Generate token for verified and authenticated user
-            String token = jwtUtil.generateToken(user.getEmail());
+            String token = jwtUtil.generateToken(user.getEmail(), user.getId());
 
             return ResponseEntity.ok(Map.of(
                     "token", token,
-                    "email", user.getEmail(),
-                    "id", user.getId(),
-                    "verified", true
+                    "user", Map.of(
+                            "id", user.getId(),
+                            "email", user.getEmail(),
+                            "verified", user.getIsEmailVerified()
+                    )
             ));
 
         } catch (BadCredentialsException e) {
