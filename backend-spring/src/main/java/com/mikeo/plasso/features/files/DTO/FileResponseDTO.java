@@ -9,54 +9,24 @@ import java.util.List;
 public class FileResponseDTO {
 
     private String id;
-
-    private Project project;
-
-    private ProjectFile parent; // Null = root level file
-
-    private List<ProjectFile> children = new ArrayList<>(); // Empty if it's a file
-
-    private String name; // e.g., "main.js" or "utils" (folder name)
-
-    private String language; // e.g., "javascript", "python" (null for folders)
-
-    private boolean folder = false; // true = folder, false = file
-
-    private boolean mainFile = false; // Entry point for execution
-
-    private String content; // Store code as plain text
-
-    //private String createdBy;
-    //private String updatedBy;
+    private String name;
+    private String language;
+    private boolean folder;
+    private boolean mainFile;
+    private String content;
+    private String parentId;
 
     public FileResponseDTO() {
     }
 
-    public FileResponseDTO(List<ProjectFile> children, String content, boolean folder, String id, String language, boolean mainFile, String name, ProjectFile parent, Project project) {
-        this.children = children;
+    public FileResponseDTO(String content, boolean folder, String id, String language, boolean mainFile, String name, String parentId) {
         this.content = content;
         this.folder = folder;
         this.id = id;
         this.language = language;
         this.mainFile = mainFile;
         this.name = name;
-        this.parent = parent;
-        this.project = project;
-    }
-
-    public FileResponseDTO(String name, ProjectFile parent, Project project) {
-        this.name = name;
-        this.parent = parent;
-        this.project = project;
-        this.folder = true;
-    }
-
-    public List<ProjectFile> getChildren() {
-        return children;
-    }
-
-    public void setChildren(List<ProjectFile> children) {
-        this.children = children;
+        this.parentId = parentId;
     }
 
     public String getContent() {
@@ -107,19 +77,11 @@ public class FileResponseDTO {
         this.name = name;
     }
 
-    public ProjectFile getParent() {
-        return parent;
+    public String getParentId() {
+        return parentId;
     }
 
-    public void setParent(ProjectFile parent) {
-        this.parent = parent;
-    }
-
-    public Project getProject() {
-        return project;
-    }
-
-    public void setProject(Project project) {
-        this.project = project;
+    public void setParentId(String parentId) {
+        this.parentId = parentId;
     }
 }

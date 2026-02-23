@@ -4,6 +4,7 @@ import com.mikeo.plasso.Command;
 import com.mikeo.plasso.application.exceptions.AccessDeniedException;
 import com.mikeo.plasso.application.exceptions.BusinessValidationException;
 import com.mikeo.plasso.application.exceptions.ResourceNotFoundException;
+import com.mikeo.plasso.features.files.DTO.FileResponseDTO;
 import com.mikeo.plasso.features.files.FileController;
 import com.mikeo.plasso.features.files.FileRepository;
 import com.mikeo.plasso.features.files.entity.ProjectFile;
@@ -14,35 +15,30 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @Transactional
-public class DeleteFile implements Command<FileController.DeleteFileCommand, Void> {
+public class SetMainFile implements Command<FileController.SetMainFileCommand, FileResponseDTO> {
 
     private final FileRepository fileRepository;
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
 
-
-
-    public DeleteFile(FileRepository fileRepository, UserRepository userRepository, ProjectRepository projectRepository) {
+    public SetMainFile(FileRepository fileRepository, UserRepository userRepository, ProjectRepository projectRepository) {
         this.fileRepository = fileRepository;
         this.userRepository = userRepository;
         this.projectRepository = projectRepository;
     }
 
     @Override
-    public ResponseEntity<Void> execute(FileController.DeleteFileCommand input) {
+    public ResponseEntity<FileResponseDTO> execute(FileController.SetMainFileCommand input) {
         String userId = input.userId();
         String projectId = input.projectId();
         String fileId = input.fileId();
 
-        // Verify user
+        // Verify access
         userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // Verify project access
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
 
@@ -54,29 +50,33 @@ public class DeleteFile implements Command<FileController.DeleteFileCommand, Voi
             throw new AccessDeniedException("You don't have access to this project");
         }
 
-        // Get file to delete
+        // Get the file
         ProjectFile file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new ResourceNotFoundException("File not found"));
 
-        // Verify file belongs to project
-        if (!file.getProject().getId().equals(projectId)) {
-            throw new BusinessValidationException("File does not belong to this project");
+        if (file.isFolder()) {
+            throw new BusinessValidationException("Cannot set a folder as main file");
         }
 
-        // If deleting main file, unmark it (or set another file as main)
-        if (file.isMainFile()) {
-            // Option: Find another file to mark as main
-            List<ProjectFile> otherFiles = fileRepository.findByProjectIdAndFolderFalseAndIdNot(projectId, fileId);
-            if (!otherFiles.isEmpty()) {
-                ProjectFile newMain = otherFiles.get(0);
-                newMain.setMainFile(true);
-                fileRepository.save(newMain);
-            }
+        // Unmark current main file
+        ProjectFile currentMain = fileRepository.findByProjectIdAndMainFileTrue(projectId);
+        if (currentMain != null) {
+            currentMain.setMainFile(false);
+            fileRepository.save(currentMain);
         }
 
-        // Delete file (cascade will delete children if it's a folder)
-        fileRepository.delete(file);
+        // Mark new main file
+        file.setMainFile(true);
+        file = fileRepository.save(file);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(mapToDTO(file));
+    }
+
+    private FileResponseDTO mapToDTO(ProjectFile file) {
+        FileResponseDTO dto = new FileResponseDTO();
+        dto.setId(file.getId());
+        dto.setName(file.getName());
+        dto.setMainFile(file.isMainFile());
+        return dto;
     }
 }

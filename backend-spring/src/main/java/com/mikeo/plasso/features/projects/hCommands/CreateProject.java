@@ -46,7 +46,7 @@ public class CreateProject implements Command<ProjectController.CreateProjectCom
 
         try{
             if(projectRepository.existsByName(projectRequestDTO.getName())){
-                throw new BusinessValidationException("Case title already exists");
+                throw new BusinessValidationException("Project title already exists");
             }
 
             User user = userRepository.findById(userId)

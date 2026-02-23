@@ -8,6 +8,7 @@ import com.mikeo.plasso.features.files.DTO.FileTreeResponse;
 import com.mikeo.plasso.features.files.hCommands.CreateFile;
 import com.mikeo.plasso.features.files.hCommands.CreateFolder;
 import com.mikeo.plasso.features.files.hCommands.DeleteFile;
+import com.mikeo.plasso.features.files.hCommands.SetMainFile;
 import com.mikeo.plasso.features.files.hQueries.GetFileTree;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -25,17 +26,20 @@ public class FileController {
     private final CreateFile createFile;
     private final DeleteFile deleteFile;
     private final GetFileTree fileTree;
+    private final SetMainFile setMainFile;
 
-    public FileController(CreateFile createFile, CreateFolder createFolder, DeleteFile deleteFile, GetFileTree fileTree) {
+    public FileController(CreateFile createFile, CreateFolder createFolder, DeleteFile deleteFile, GetFileTree fileTree, SetMainFile setMainFile) {
         this.createFile = createFile;
         this.createFolder = createFolder;
         this.deleteFile = deleteFile;
         this.fileTree = fileTree;
+        this.setMainFile = setMainFile;
     }
 
     public record CreateFileCommand(String userId, String projectId, CreateFileRequest request) {}
     public record CreateFolderCommand(String userId, String projectId, CreateFolderRequest request) {}
     public record DeleteFileCommand(String userId, String projectId, String fileId) {}
+    public record SetMainFileCommand(String userId, String projectId, String fileId){}
 
     @GetMapping("/file-tree")
     public ResponseEntity<List<FileTreeResponse>> getFileTree(
@@ -57,9 +61,7 @@ public class FileController {
             ){
 
         String userId = (String) httpRequest.getAttribute("userId");
-
         CreateFileCommand fileCommand = new CreateFileCommand(userId, projectsId, createFileRequest);
-
         return createFile.execute(fileCommand);
 
     }
@@ -71,10 +73,19 @@ public class FileController {
             HttpServletRequest httpRequest
     ){
         String userId = (String) httpRequest.getAttribute("userId");
-
         CreateFolderCommand folderCommand = new CreateFolderCommand(userId, projectsId, createFolderRequest);
-
         return createFolder.execute(folderCommand);
+    }
+
+    @PutMapping("/{fileId}/set-main")
+    public ResponseEntity<FileResponseDTO> setMainFile(
+            @PathVariable String projectsId,
+            @PathVariable String fileId,
+            HttpServletRequest httpRequest) {
+
+        String userId = (String) httpRequest.getAttribute("userId");
+        SetMainFileCommand command = new SetMainFileCommand(userId, projectsId, fileId);
+        return setMainFile.execute(command);
     }
 
     @DeleteMapping("/{fileId}")
@@ -84,9 +95,7 @@ public class FileController {
             HttpServletRequest httpRequest
     ){
         String userId = (String) httpRequest.getAttribute("userId");
-
         DeleteFileCommand deleteFileCommand = new DeleteFileCommand(userId, projectsId, fileId);
-
         return deleteFile.execute(deleteFileCommand);
     }
 }
