@@ -1,4 +1,4 @@
-package com.mikeo.plasso.features.projects.handleQueries;
+package com.mikeo.plasso.features.projects.hQueries;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

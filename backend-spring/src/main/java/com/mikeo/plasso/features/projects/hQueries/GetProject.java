@@ -1,4 +1,4 @@
-package com.mikeo.plasso.features.projects.handleQueries;
+package com.mikeo.plasso.features.projects.hQueries;
 
 import com.mikeo.plasso.Query;
 import com.mikeo.plasso.features.projects.ProjectRepository;

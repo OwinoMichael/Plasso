@@ -1,4 +1,4 @@
-package com.mikeo.plasso.features.projects.handleQueries;
+package com.mikeo.plasso.features.projects.hQueries;
 
 import com.mikeo.plasso.Query;
 import com.mikeo.plasso.application.exceptions.ResourceNotFoundException;
@@ -10,12 +10,9 @@ import com.mikeo.plasso.features.users.entity.User;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class GetAllProjects implements Query<UserProjectQueryParams, Page<ProjectResponseDTO>> {

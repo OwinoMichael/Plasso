@@ -1,4 +1,4 @@
-package com.mikeo.plasso.features.projects.handleQueries;
+package com.mikeo.plasso.features.projects.hQueries;
 
 public class UserProjectQueryParams {
 

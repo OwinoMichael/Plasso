@@ -2,10 +2,10 @@ package com.mikeo.plasso.features.projects;
 
 import com.mikeo.plasso.features.projects.DTO.ProjectRequestDTO;
 import com.mikeo.plasso.features.projects.DTO.ProjectResponseDTO;
-import com.mikeo.plasso.features.projects.handleCommands.CreateProject;
-import com.mikeo.plasso.features.projects.handleQueries.GetAllProjects;
-import com.mikeo.plasso.features.projects.handleQueries.ProjectPagination;
-import com.mikeo.plasso.features.projects.handleQueries.UserProjectQueryParams;
+import com.mikeo.plasso.features.projects.hCommands.CreateProject;
+import com.mikeo.plasso.features.projects.hQueries.GetAllProjects;
+import com.mikeo.plasso.features.projects.hQueries.ProjectPagination;
+import com.mikeo.plasso.features.projects.hQueries.UserProjectQueryParams;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

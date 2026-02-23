@@ -1,4 +1,4 @@
-package com.mikeo.plasso.features.projects.handleCommands;
+package com.mikeo.plasso.features.projects.hCommands;
 
 import com.mikeo.plasso.Command;
 import com.mikeo.plasso.application.exceptions.BusinessValidationException;
@@ -44,6 +44,7 @@ public class CreateProject implements Command<ProjectRequestDTO, ProjectResponse
             project.setLanguage(projectRequestDTO.getLanguage());
             project.setPublicProject(projectRequestDTO.isPublicProject());
             project.setOwner(user);
+            project.getCollaborators().add(user);
 
             return ResponseEntity.ok(mapToResponseDTO(project));
         } catch (Exception e) {
