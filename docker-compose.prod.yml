@@ -36,6 +36,8 @@ services:
       FRONTEND_URL: ${FRONTEND_URL}
       JWT_SECRET: ${JWT_SECRET}              # Add this
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+      MAIL_USER: ${MAIL_USER}  
+      MAIL_PASS: ${MAIL_PASS
       # Add any other environment variables your app needs
     depends_on:
       db:
@@ -48,7 +50,7 @@ services:
     # Don't expose Spring Boot port externally - nginx will proxy to it
     
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
