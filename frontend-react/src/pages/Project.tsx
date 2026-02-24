@@ -4,6 +4,7 @@ import Editor from "@/components/Editor";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import axios from "@/services/auth-header";
+import type { OpenFile } from "@/types/editor";
 
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -15,12 +16,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 // pages/Project.tsx
 const Project = () => {
 
-  interface OpenFile {
-  id: string;
-  name: string;
-  content: string;
-  language: string;
-}
+  
 
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -33,6 +29,14 @@ const Project = () => {
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
 
   const handleFileSelect = async (fileId: string, fileName: string) => {
+
+  // const newFile: OpenFile = {
+  //   id: fileId,
+  //   name: fileName,
+  //   content: file.content,
+  //   language: file.language || "text",
+  //   isDirty: false
+  // };
 
   // If already open → just activate tab
   const existing = openFiles.find(f => f.id === fileId);
@@ -52,7 +56,8 @@ const Project = () => {
       id: fileId,
       name: fileName,
       content: file.content,
-      language: file.language || "text"
+      language: file.language || "text",
+      isDirty: false
     };
 
     setOpenFiles(prev => [...prev, newFile]);
@@ -90,6 +95,7 @@ const Project = () => {
           <div className="flex-1 flex">
             <Editor
               openFiles={openFiles}
+              setOpenFiles={setOpenFiles}
               activeFileId={activeFileId}
               setActiveFileId={setActiveFileId}
             />
