@@ -1,14 +1,12 @@
 package com.mikeo.plasso.features.files;
 
 
-import com.mikeo.plasso.features.files.DTO.CreateFileRequest;
-import com.mikeo.plasso.features.files.DTO.CreateFolderRequest;
-import com.mikeo.plasso.features.files.DTO.FileResponseDTO;
-import com.mikeo.plasso.features.files.DTO.FileTreeResponse;
+import com.mikeo.plasso.features.files.DTO.*;
 import com.mikeo.plasso.features.files.hCommands.CreateFile;
 import com.mikeo.plasso.features.files.hCommands.CreateFolder;
 import com.mikeo.plasso.features.files.hCommands.DeleteFile;
 import com.mikeo.plasso.features.files.hCommands.SetMainFile;
+import com.mikeo.plasso.features.files.hQueries.GetFile;
 import com.mikeo.plasso.features.files.hQueries.GetFileTree;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -27,19 +25,22 @@ public class FileController {
     private final DeleteFile deleteFile;
     private final GetFileTree fileTree;
     private final SetMainFile setMainFile;
+    private final GetFile getFile;
 
-    public FileController(CreateFile createFile, CreateFolder createFolder, DeleteFile deleteFile, GetFileTree fileTree, SetMainFile setMainFile) {
+    public FileController(CreateFile createFile, CreateFolder createFolder, DeleteFile deleteFile, GetFileTree fileTree, SetMainFile setMainFile, GetFile getFile) {
         this.createFile = createFile;
         this.createFolder = createFolder;
         this.deleteFile = deleteFile;
         this.fileTree = fileTree;
         this.setMainFile = setMainFile;
+        this.getFile = getFile;
     }
 
     public record CreateFileCommand(String userId, String projectId, CreateFileRequest request) {}
     public record CreateFolderCommand(String userId, String projectId, CreateFolderRequest request) {}
     public record DeleteFileCommand(String userId, String projectId, String fileId) {}
     public record SetMainFileCommand(String userId, String projectId, String fileId){}
+    public record GetFileCommand(String userId, String projectId, String fileId){}
 
     @GetMapping("/file-tree")
     public ResponseEntity<List<FileTreeResponse>> getFileTree(
@@ -51,6 +52,19 @@ public class FileController {
         Pair<String, String> pairOfIds = Pair.of(userId, projectsId);
 
         return fileTree.execute(pairOfIds);
+    }
+
+    @GetMapping("/{fileId}")
+    public ResponseEntity<FileResponseDTO> getFile(
+            @PathVariable String projectsId,
+            @PathVariable String fileId,
+            HttpServletRequest request
+    ){
+        String userId = (String)  request.getAttribute("userId");
+
+        GetFileCommand getFileCommand = new GetFileCommand(userId, projectsId, fileId);
+
+        return getFile.execute(getFileCommand);
     }
 
     @PostMapping("/create-file")

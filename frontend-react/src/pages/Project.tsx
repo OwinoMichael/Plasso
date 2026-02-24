@@ -3,12 +3,25 @@ import Console from "@/components/Console";
 import Editor from "@/components/Editor";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
+import axios from "@/services/auth-header";
 
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+
+
+
 // pages/Project.tsx
 const Project = () => {
+
+  interface OpenFile {
+  id: string;
+  name: string;
+  content: string;
+  language: string;
+}
+
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
@@ -16,11 +29,39 @@ const Project = () => {
   const [showSidebar, setShowSidebar] = useState(true);
   const [showAIPanel, setShowAIPanel] = useState(true);
   const [showConsole, setShowConsole] = useState(true);
+  const [openFiles, setOpenFiles] = useState<OpenFile[]>([]);
+  const [activeFileId, setActiveFileId] = useState<string | null>(null);
 
-  const handleFileSelect = (fileId: string, fileName: string) => {
-    setSelectedFileId(fileId);
-    setSelectedFileName(fileName);
-  };
+  const handleFileSelect = async (fileId: string, fileName: string) => {
+
+  // If already open → just activate tab
+  const existing = openFiles.find(f => f.id === fileId);
+  if (existing) {
+    setActiveFileId(fileId);
+    return;
+  }
+
+  try {
+    const res = await axios.get(
+      `${API_URL}/projects/${id}/files/${fileId}`
+    );
+
+    const file = res.data;
+
+    const newFile: OpenFile = {
+      id: fileId,
+      name: fileName,
+      content: file.content,
+      language: file.language || "text"
+    };
+
+    setOpenFiles(prev => [...prev, newFile]);
+    setActiveFileId(fileId);
+
+  } catch (err) {
+    console.error("Failed loading file", err);
+  }
+};
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -47,7 +88,11 @@ const Project = () => {
 
         <div className="flex-1 flex flex-col">
           <div className="flex-1 flex">
-            <Editor selectedFile={selectedFileName} />
+            <Editor
+              openFiles={openFiles}
+              activeFileId={activeFileId}
+              setActiveFileId={setActiveFileId}
+            />
             {showAIPanel && <AIPanel onClose={() => setShowAIPanel(false)} />}
           </div>
           {showConsole && <Console onClose={() => setShowConsole(false)} />}

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { FileCode, Plus, FolderPlus, Users, ChevronRight, ChevronDown, X, Loader2, Trash2, Star } from 'lucide-react';
+import { FileCode, Plus, FolderPlus, Users, ChevronRight, ChevronDown, X, Loader2, Trash2, Star, FolderPlusIcon, FilePlus } from 'lucide-react';
 import axios from '../services/auth-header';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
@@ -28,84 +28,15 @@ const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect
   const [fileTree, setFileTree] = useState<FileTreeNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showCreateFileDialog, setShowCreateFileDialog] = useState(false);
-  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
-  const [newFileName, setNewFileName] = useState('');
-  const [newFolderName, setNewFolderName] = useState('');
+
+
+  const [creatingFileInFolder, setCreatingFileInFolder] = useState<string | null>(null); // folder ID
+  const [creatingFolderInFolder, setCreatingFolderInFolder] = useState<string | null>(null);
+  const [showCreateFileAtRoot, setShowCreateFileAtRoot] = useState(false);
+  const [showCreateFolderAtRoot, setShowCreateFolderAtRoot] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
-
-  const handleCreateFile = async () => {
-    if (!newFileName.trim()) return;
-
-    try {
-      await axios.post(`${API_URL}/projects/${projectId}/files/create-file`, {
-        name: newFileName,
-        parentId: selectedParentId,
-        language: getLanguageFromExtension(newFileName),
-        content: ''
-      });
-
-      setNewFileName('');
-      setShowCreateFileDialog(false);
-      fetchFileTree(); // Refresh tree
-    } catch (error) {
-      console.error('Error creating file:', error);
-    }
-  };
-
-  const handleCreateFolder = async () => {
-    if (!newFolderName.trim()) return;
-
-    try {
-      await axios.post(`${API_URL}/projects/${projectId}/files/create-folder`, {
-        name: newFolderName,
-        parentId: selectedParentId
-      });
-
-      setNewFolderName('');
-      setShowCreateFolderDialog(false);
-      fetchFileTree();
-    } catch (error) {
-      console.error('Error creating folder:', error);
-    }
-  };
-
-  const handleDeleteFile = async (fileId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (!confirm('Are you sure you want to delete this file/folder?')) return;
-
-    try {
-      await axios.delete(`${API_URL}/projects/${projectId}/files/${fileId}`);
-      fetchFileTree();
-    } catch (error) {
-      console.error('Error deleting file:', error);
-    }
-  };
-
-  const handleSetMainFile = async (fileId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-
-    try {
-      await axios.put(`${API_URL}/projects/${projectId}/files/${fileId}/set-main`);
-      fetchFileTree();
-    } catch (error) {
-      console.error('Error setting main file:', error);
-    }
-  };
-
-  const getLanguageFromExtension = (filename: string): string => {
-    const ext = filename.split('.').pop()?.toLowerCase();
-    const map: Record<string, string> = {
-      'js': 'javascript',
-      'ts': 'typescript',
-      'py': 'python',
-      'java': 'java',
-      'cpp': 'cpp',
-      'c': 'c'
-    };
-    return map[ext || ''] || 'text';
-  };
+  const [newFolderName, setNewFolderName] = useState('');
 
   const activeUsers = [
     { name: 'You', color: '#85E4FF', cursor: { line: 15, col: 23 } },
@@ -157,13 +88,123 @@ const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect
     setExpandedFolders(newExpanded);
   };
 
+  const getLanguageFromExtension = (filename: string): string => {
+    const ext = filename.split('.').pop()?.toLowerCase();
+    const map: Record<string, string> = {
+      'js': 'javascript',
+      'ts': 'typescript',
+      'py': 'python',
+      'java': 'java',
+      'cpp': 'cpp',
+      'c': 'c'
+    };
+    return map[ext || ''] || 'text';
+  };
+
+  const handleCreateFile = async (parentId: string | null) => {
+    if (!newItemName.trim()) return;
+
+    try {
+      await axios.post(`${API_URL}/projects/${projectId}/files/create-file`, {
+        name: newItemName.trim(),
+        parentId: parentId,
+        language: getLanguageFromExtension(newItemName),
+        content: ''
+      });
+
+      setNewItemName('');
+      setCreatingFileInFolder(null);
+      setShowCreateFileAtRoot(false);
+      fetchFileTree();
+    } catch (error: any) {
+      console.error('Error creating file:', error);
+      alert(error.response?.data?.message || 'Failed to create file');
+    }
+  };
+
+  const handleCreateFolder = async (parentId: string | null) => {
+    if (!newItemName.trim()) return;
+
+    try {
+      await axios.post(`${API_URL}/projects/${projectId}/files/create-folder`, {
+        name: newItemName.trim(),
+        parentId: parentId
+      });
+
+      setNewItemName('');
+      setCreatingFolderInFolder(null);
+      setShowCreateFolderAtRoot(false);
+      fetchFileTree();
+    } catch (error: any) {
+      console.error('Error creating folder:', error);
+      alert(error.response?.data?.message || 'Failed to create folder');
+    }
+  };
+
+  const handleDeleteFile = async (fileId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!confirm('Are you sure you want to delete this file/folder?')) return;
+
+    try {
+      await axios.delete(`${API_URL}/projects/${projectId}/files/${fileId}`);
+      fetchFileTree();
+    } catch (error) {
+      console.error('Error deleting file:', error);
+    }
+  };
+
+  const handleSetMainFile = async (fileId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    try {
+      await axios.put(`${API_URL}/projects/${projectId}/files/${fileId}/set-main`);
+      fetchFileTree();
+    } catch (error) {
+      console.error('Error setting main file:', error);
+    }
+  };
+
+  
+
+  
+
+  const startCreatingFile = (folderId: string | null, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setCreatingFileInFolder(folderId);
+    setCreatingFolderInFolder(null);
+    setShowCreateFileAtRoot(folderId === null);
+    setShowCreateFolderAtRoot(false);
+    setNewItemName('');
+  };
+
+  const startCreatingFolder = (folderId: string | null, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setCreatingFolderInFolder(folderId);
+    setCreatingFileInFolder(null);
+    setShowCreateFolderAtRoot(folderId === null);
+    setShowCreateFileAtRoot(false);
+    setNewItemName('');
+  };
+
+  const cancelCreation = () => {
+    setCreatingFileInFolder(null);
+    setCreatingFolderInFolder(null);
+    setShowCreateFileAtRoot(false);
+    setShowCreateFolderAtRoot(false);
+    setNewItemName('');
+  };
+
   const renderFileTree = (nodes: FileTreeNode[], level: number = 0): React.ReactNode => {
     return nodes.map(node => {
       const isExpanded = expandedFolders.has(node.id);
+      const isCreatingFileHere = creatingFileInFolder === node.id;
+      const isCreatingFolderHere = creatingFolderInFolder === node.id;
 
       if (node.folder) {
         return (
           <div key={node.id}>
+            {/* Folder Row */}
             <div
               className="flex items-center gap-1 px-2 py-1 hover:bg-accent cursor-pointer rounded text-sm group"
               style={{ paddingLeft: `${level * 12 + 8}px` }}
@@ -174,22 +215,89 @@ const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect
                 ) : (
                   <ChevronRight className="w-4 h-4" />
                 )}
+                <FolderPlusIcon className="w-4 h-4" />
                 <span>{node.name}</span>
               </div>
-              <button
-                onClick={(e) => handleDeleteFile(node.id, e)}
-                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-destructive/10 rounded"
-              >
-                <Trash2 className="w-3 h-3 text-destructive" />
-              </button>
+              
+              {/* Folder Actions */}
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                <button
+                  onClick={(e) => startCreatingFile(node.id, e)}
+                  className="p-1 hover:bg-primary/10 rounded"
+                  title="New file in folder"
+                >
+                  <FilePlus className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={(e) => startCreatingFolder(node.id, e)}
+                  className="p-1 hover:bg-primary/10 rounded"
+                  title="New folder in folder"
+                >
+                  <FolderPlus className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={(e) => handleDeleteFile(node.id, e)}
+                  className="p-1 hover:bg-destructive/10 rounded"
+                  title="Delete folder"
+                >
+                  <Trash2 className="w-3 h-3 text-destructive" />
+                </button>
+              </div>
             </div>
-            {isExpanded && node.children && node.children.length > 0 && (
-              <div>{renderFileTree(node.children, level + 1)}</div>
+
+            {/* Expanded Folder Contents */}
+            {isExpanded && (
+              <div>
+                {/* Show creation input if creating in this folder */}
+                {isCreatingFileHere && (
+                  <div 
+                    className="px-2 py-1 bg-muted/50 rounded mx-2 my-1"
+                    style={{ marginLeft: `${(level + 1) * 12 + 8}px` }}
+                  >
+                    <Input
+                      placeholder="filename.js"
+                      value={newItemName}
+                      onChange={(e) => setNewItemName(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') handleCreateFile(node.id);
+                        if (e.key === 'Escape') cancelCreation();
+                      }}
+                      onBlur={cancelCreation}
+                      autoFocus
+                      className="h-7 text-xs"
+                    />
+                  </div>
+                )}
+
+                {isCreatingFolderHere && (
+                  <div 
+                    className="px-2 py-1 bg-muted/50 rounded mx-2 my-1"
+                    style={{ marginLeft: `${(level + 1) * 12 + 8}px` }}
+                  >
+                    <Input
+                      placeholder="folder name"
+                      value={newItemName}
+                      onChange={(e) => setNewItemName(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') handleCreateFolder(node.id);
+                        if (e.key === 'Escape') cancelCreation();
+                      }}
+                      onBlur={cancelCreation}
+                      autoFocus
+                      className="h-7 text-xs"
+                    />
+                  </div>
+                )}
+
+                {/* Children */}
+                {node.children && node.children.length > 0 && renderFileTree(node.children, level + 1)}
+              </div>
             )}
           </div>
         );
       }
 
+      // File Row
       return (
         <div
           key={node.id}
@@ -202,6 +310,8 @@ const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect
             <FileCode className="w-4 h-4" />
             <span>{node.name}</span>
           </div>
+          
+          {/* File Actions */}
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
             {!node.mainFile && (
               <button
@@ -218,6 +328,7 @@ const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect
             <button
               onClick={(e) => handleDeleteFile(node.id, e)}
               className="p-1 hover:bg-destructive/10 rounded"
+              title="Delete file"
             >
               <Trash2 className="w-3 h-3 text-destructive" />
             </button>
@@ -237,7 +348,8 @@ const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect
               variant="ghost" 
               size="sm" 
               className="h-6 w-6 p-0"
-              onClick={() => setShowCreateFileDialog(true)}
+              onClick={() => startCreatingFile(null)}
+              title="New file at root"
             >
               <Plus className="w-3 h-3" />
             </Button>
@@ -245,7 +357,8 @@ const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect
               variant="ghost" 
               size="sm" 
               className="h-6 w-6 p-0"
-              onClick={() => setShowCreateFolderDialog(true)}
+              onClick={() => startCreatingFolder(null)}
+              title="New folder at root"
             >
               <FolderPlus className="w-3 h-3" />
             </Button>
@@ -255,37 +368,38 @@ const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect
           </div>
         </div>
 
-        {/* Create File Dialog */}
-        {showCreateFileDialog && (
-          <div className="mb-3 p-2 bg-muted rounded">
+        {/* Root-level creation inputs */}
+        {showCreateFileAtRoot && (
+          <div className="mb-2 p-2 bg-muted/50 rounded">
             <Input
               placeholder="filename.js"
-              value={newFileName}
-              onChange={(e) => setNewFileName(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleCreateFile()}
+              value={newItemName}
+              onChange={(e) => setNewItemName(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') handleCreateFile(null);
+                if (e.key === 'Escape') cancelCreation();
+              }}
+              onBlur={cancelCreation}
               autoFocus
+              className="h-7 text-xs"
             />
-            <div className="flex gap-2 mt-2">
-              <Button size="sm" onClick={handleCreateFile}>Create</Button>
-              <Button size="sm" variant="outline" onClick={() => setShowCreateFileDialog(false)}>Cancel</Button>
-            </div>
           </div>
         )}
 
-        {/* Create Folder Dialog */}
-        {showCreateFolderDialog && (
-          <div className="mb-3 p-2 bg-muted rounded">
+        {showCreateFolderAtRoot && (
+          <div className="mb-2 p-2 bg-muted/50 rounded">
             <Input
               placeholder="folder name"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleCreateFolder()}
+              value={newItemName}
+              onChange={(e) => setNewItemName(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') handleCreateFolder(null);
+                if (e.key === 'Escape') cancelCreation();
+              }}
+              onBlur={cancelCreation}
               autoFocus
+              className="h-7 text-xs"
             />
-            <div className="flex gap-2 mt-2">
-              <Button size="sm" onClick={handleCreateFolder}>Create</Button>
-              <Button size="sm" variant="outline" onClick={() => setShowCreateFolderDialog(false)}>Cancel</Button>
-            </div>
           </div>
         )}
 
@@ -294,12 +408,36 @@ const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
           </div>
+        ) : error ? (
+          <div className="text-center py-8">
+            <p className="text-sm text-red-500 mb-2">{error}</p>
+            <Button variant="outline" size="sm" onClick={fetchFileTree}>
+              Retry
+            </Button>
+          </div>
+        ) : fileTree.length === 0 ? (
+          <div className="text-center py-8">
+            <FileCode className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+            <p className="text-xs text-muted-foreground">No files yet</p>
+          </div>
         ) : (
           renderFileTree(fileTree)
         )}
       </div>
       
-      {/* Active Users - existing code */}
+      <div className="p-3 border-t border-sidebar-border">
+        <div className="flex items-center gap-2 mb-2">
+          <Users className="w-4 h-4" />
+          <span className="text-xs font-semibold">ACTIVE USERS</span>
+        </div>
+        {activeUsers.map((user, idx) => (
+          <div key={idx} className="flex items-center gap-2 py-1">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: user.color }} />
+            <span className="text-xs">{user.name}</span>
+            <span className="text-xs text-muted-foreground ml-auto">Ln {user.cursor.line}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
