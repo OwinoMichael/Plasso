@@ -1,43 +1,215 @@
-import React from 'react';
-import { FileCode } from 'lucide-react';
+import React, { useState } from "react";
+import EditorMonaco from "@monaco-editor/react";
+import type { OpenFile } from "@/types/editor";
+import { FileCode } from "lucide-react";
+
+
 
 interface EditorProps {
-  selectedFile: string;
+  openFiles: OpenFile[];
+  setOpenFiles: React.Dispatch<React.SetStateAction<OpenFile[]>>;
+  activeFileId: string | null;
+  setActiveFileId: (id: string | null) => void;
 }
 
-const Editor: React.FC<EditorProps> = ({ selectedFile }) => {
+const Editor: React.FC<EditorProps> = ({
+  openFiles,
+  setOpenFiles,
+  activeFileId,
+  setActiveFileId
+}) => {
+
+  /* ===============================
+     Editor Settings State
+  =============================== */
+
+  const [theme, setTheme] = useState("vs-dark");
+
+  const [editorOptions, setEditorOptions] = useState({
+    fontSize: 14,
+    wordWrap: "off" as "off" | "on",
+    minimap: { enabled: false }
+  });
+
+  const updateOption = (key: string, value: any) => {
+    setEditorOptions(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const toggleMinimap = () => {
+    setEditorOptions(prev => ({
+      ...prev,
+      minimap: { enabled: !prev.minimap.enabled }
+    }));
+  };
+
+  const handleEditorChange = (value?: string) => {
+    if (!activeFileId) return;
+
+    setOpenFiles(files =>
+      files.map(file =>
+        file.id === activeFileId
+          ? {
+              ...file,
+              content: value ?? "",
+              isDirty: true
+            }
+          : file
+      )
+    );
+  };
+
+  const closeTab = (fileId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    setOpenFiles(prev => {
+      const newFiles = prev.filter(f => f.id !== fileId);
+
+      // if closing active tab → switch intelligently
+      if (fileId === activeFileId) {
+        if (newFiles.length > 0) {
+          setActiveFileId(newFiles[newFiles.length - 1].id);
+        } else {
+          setActiveFileId(null);
+        }
+      }
+
+      return newFiles;
+    });
+  };
+
+  /* ===============================
+     Active File
+  =============================== */
+
+  const activeFile = openFiles.find(f => f.id === activeFileId);
+
+  /* ===============================
+     Render
+  =============================== */
+
   return (
-    <div className="flex-1 flex flex-col">
-      <div className="h-10 border-b border-border flex items-center px-2 bg-muted/30">
-        <div className="px-3 py-1 rounded-t text-sm flex items-center gap-2 bg-background">
-          <FileCode className="w-3 h-3" />
-          {selectedFile}
+    <div className="flex-1 flex flex-col overflow-hidden">
+
+      {/* ===================================================
+          TOP BAR (Tabs LEFT + Settings RIGHT)
+      =================================================== */}
+      <div className="h-10 border-b bg-muted/30 flex items-center justify-between px-2">
+
+        {/* ---------- LEFT: Tabs ---------- */}
+        <div className="flex items-center overflow-x-auto gap-1">
+          {openFiles.map(file => (
+            <div
+              key={file.id}
+              onClick={() => setActiveFileId(file.id)}
+              className={`
+                flex items-center gap-2 px-3 py-1 text-sm
+                rounded-t cursor-pointer whitespace-nowrap group
+                ${file.id === activeFileId
+                  ? "bg-background border border-b-0"
+                  : "opacity-70 hover:opacity-100"}
+              `}
+            >
+              <span className="flex items-center gap-1">
+
+                {/* Dirty indicator */}
+                {file.isDirty && (
+                  <span className="text-yellow-400 text-xs">●</span>
+                )}
+
+                {file.name}
+              </span>
+
+              {/* Close Button */}
+              <button
+                onClick={(e) => closeTab(file.id, e)}
+                className="opacity-0 group-hover:opacity-100 hover:bg-accent rounded px-1"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* ---------- RIGHT: Editor Settings ---------- */}
+        <div className="flex items-center gap-2 text-xs">
+
+          {/* Theme */}
+          <select
+            value={theme}
+            onChange={(e) => setTheme(e.target.value)}
+            className="bg-background border rounded px-2 py-1"
+          >
+            <option value="vs-dark">Dark</option>
+            <option value="light">Light</option>
+            <option value="hc-black">High Contrast</option>
+          </select>
+
+          {/* Font Size */}
+          <select
+            value={editorOptions.fontSize}
+            onChange={(e) =>
+              updateOption("fontSize", Number(e.target.value))
+            }
+            className="bg-background border rounded px-2 py-1"
+          >
+            {[12, 14, 16, 18, 20].map(size => (
+              <option key={size} value={size}>
+                {size}px
+              </option>
+            ))}
+          </select>
+
+          {/* Word Wrap */}
+          <button
+            onClick={() =>
+              updateOption(
+                "wordWrap",
+                editorOptions.wordWrap === "on" ? "off" : "on"
+              )
+            }
+            className="px-2 py-1 border rounded hover:bg-accent"
+          >
+            Wrap
+          </button>
+
+          {/* Minimap */}
+          <button
+            onClick={toggleMinimap}
+            className="px-2 py-1 border rounded hover:bg-accent"
+          >
+            Map
+          </button>
+
         </div>
       </div>
 
-      <div className="flex-1 p-4 font-mono text-sm overflow-auto bg-background">
-        <div className="space-y-1">
-          <div><span className="text-primary">import</span> <span className="text-chart-2">React</span> <span className="text-primary">from</span> <span className="text-chart-1">'react'</span>;</div>
-          <div><span className="text-primary">import</span> {'{ useState }'} <span className="text-primary">from</span> <span className="text-chart-1">'react'</span>;</div>
-          <div className="h-4"></div>
-          <div><span className="text-primary">const</span> <span className="text-chart-2">App</span> = () {'=> {'}</div>
-          <div className="pl-4"><span className="text-primary">const</span> [count, setCount] = <span className="text-chart-2">useState</span>(<span className="text-chart-1">0</span>);</div>
-          <div className="h-4"></div>
-          <div className="pl-4"><span className="text-primary">return</span> (</div>
-          <div className="pl-8">{'<'}<span className="text-chart-2">div</span> <span className="text-primary">className</span>=<span className="text-chart-1">"container"</span>{'>'}</div>
-          <div className="pl-12">{'<'}<span className="text-chart-2">h1</span>{'>'}Counter: {'{count}'}<span>{'</'}</span><span className="text-chart-2">h1</span>{'>'}</div>
-          <div className="pl-12 relative">
-            {'<'}<span className="text-chart-2">button</span> <span className="text-primary">onClick</span>={'{() => setCount(count + 1)}'}{'>'}
-            <div className="absolute -left-2 w-0.5 h-5 bg-chart-2" title="Alice's cursor"></div>
+      {/* ===================================================
+          MONACO EDITOR AREA
+      =================================================== */}
+      <div className="flex-1 overflow-hidden">
+
+        {activeFile ? (
+          <EditorMonaco
+            height="100%"
+            theme={theme}
+            language={activeFile.language}
+            value={activeFile.content}
+            onChange={handleEditorChange}
+            options={{
+              ...editorOptions,
+              automaticLayout: true,
+              scrollBeyondLastLine: false
+            }}
+          />
+        ) : (
+          <div className="h-full flex items-center justify-center text-muted-foreground">
+            Select a file to start editing
           </div>
-          <div className="pl-16">Increment</div>
-          <div className="pl-12">{'</'}<span className="text-chart-2">button</span>{'>'}</div>
-          <div className="pl-8">{'</'}<span className="text-chart-2">div</span>{'>'}</div>
-          <div className="pl-4">);</div>
-          <div>{'}'};</div>
-          <div className="h-4"></div>
-          <div><span className="text-primary">export default</span> App;</div>
-        </div>
+        )}
+
       </div>
     </div>
   );

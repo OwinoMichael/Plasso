@@ -1,4 +1,4 @@
-package com.mikeo.plasso.application.auth.service;
+package com.mikeo.plasso.application.auth.service.email_pass;
 
 import com.mikeo.plasso.Command;
 import com.mikeo.plasso.application.security.JWTUtil;
@@ -9,9 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.xml.sax.SAXException;
 
-import java.io.IOException;
 import java.net.URI;
 
 @Service
@@ -40,7 +38,7 @@ public class EmailVerificationService implements Command<String, String> {
             return new ResponseEntity<>(headers, HttpStatus.FOUND); // 302 redirect
         }
 
-        String email = jwtUtil.extractUsername(token);
+        String email = jwtUtil.extractUserEmail(token);
         User user = userRepository.findUsersByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 

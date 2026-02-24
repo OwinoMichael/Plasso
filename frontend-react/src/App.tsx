@@ -48,15 +48,7 @@ function App() {
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/home" element={<Home />} />
-          <Route path="/project/:id" element={<Project onHome={function (): void {
-            throw new Error('Function not implemented.');
-          } } onToggleSidebar={function (): void {
-            throw new Error('Function not implemented.');
-          } } onToggleAI={function (): void {
-            throw new Error('Function not implemented.');
-          } } onToggleConsole={function (): void {
-            throw new Error('Function not implemented.');
-          } } showSidebar={false} showAIPanel={false} showConsole={false} />} />
+          <Route path="/project/:id" element={<Project />} />
         </Route>
 
         {/* Public routes */}

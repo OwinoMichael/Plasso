@@ -7,6 +7,8 @@ import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Entity
@@ -34,49 +36,54 @@ public class ProjectFile extends AuditableEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
-    private ProjectFile parent;
+    private ProjectFile parent; // Null = root level file
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProjectFile> children = new ArrayList<>(); // Empty if it's a file
 
     /* ========================
-       Metadata
+       File Metadata
        ======================== */
 
     @NotBlank
     @Size(max = 255)
     @Column(name = "name", nullable = false, length = 255)
-    private String name;
-
-    @NotBlank
-    @Size(max = 500)
-    @Column(name = "path", nullable = false, length = 500)
-    private String path;
+    private String name; // e.g., "main.js" or "utils" (folder name)
 
     @Size(max = 50)
     @Column(name = "language", length = 50)
-    private String language;
+    private String language; // e.g., "javascript", "python" (null for folders)
 
     @Column(name = "is_folder", nullable = false)
-    private boolean folder = false;
+    private boolean folder = false; // true = folder, false = file
+
+    @Column(name = "is_main_file", nullable = false)
+    private boolean mainFile = false; // Entry point for execution
 
     /* ========================
-       Content
+       Content (only for files, null for folders)
        ======================== */
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "content", columnDefinition = "jsonb")
-    private Map<String, Object> content;
+    @Column(name = "content", columnDefinition = "TEXT")
+    private String content; // Store code as plain text
 
-    public ProjectFile() {
+    // Constructors
+    public ProjectFile() {}
+
+    public ProjectFile(String name, String content, String language, ProjectFile parent, Project project) {
+        this.name = name;
+        this.content = content;
+        this.language = language;
+        this.parent = parent;
+        this.project = project;
+        this.folder = false;
     }
 
-    public ProjectFile(String id, Project project, ProjectFile parent, String name, String path, String language, boolean folder, Map<String, Object> content) {
-        this.id = id;
-        this.project = project;
-        this.parent = parent;
+    public ProjectFile(String name, ProjectFile parent, Project project) {
         this.name = name;
-        this.path = path;
-        this.language = language;
-        this.folder = folder;
-        this.content = content;
+        this.parent = parent;
+        this.project = project;
+        this.folder = true;
     }
 
     public String getId() {
@@ -111,12 +118,28 @@ public class ProjectFile extends AuditableEntity {
         this.name = name;
     }
 
-    public @NotBlank @Size(max = 500) String getPath() {
-        return path;
+    public List<ProjectFile> getChildren() {
+        return children;
     }
 
-    public void setPath(@NotBlank @Size(max = 500) String path) {
-        this.path = path;
+    public void setChildren(List<ProjectFile> children) {
+        this.children = children;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public boolean isMainFile() {
+        return mainFile;
+    }
+
+    public void setMainFile(boolean mainFile) {
+        this.mainFile = mainFile;
     }
 
     public @Size(max = 50) String getLanguage() {
@@ -135,11 +158,5 @@ public class ProjectFile extends AuditableEntity {
         this.folder = folder;
     }
 
-    public Map<String, Object> getContent() {
-        return content;
-    }
 
-    public void setContent(Map<String, Object> content) {
-        this.content = content;
-    }
 }

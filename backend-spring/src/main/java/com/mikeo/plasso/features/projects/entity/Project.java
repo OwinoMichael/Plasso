@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(
         name = "projects",
@@ -54,16 +57,25 @@ public class Project extends AuditableEntity {
     )
     private User owner;
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "project_collaborators",
+            joinColumns = @JoinColumn(name = "project_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<User> collaborators = new HashSet<>();
+
     public Project() {
     }
 
-    public Project(String id, String name, String description, String language, boolean publicProject, User owner) {
-        this.id = id;
-        this.name = name;
+    public Project(Set<User> collaborators, String description, String id, String language, String name, User owner, boolean publicProject) {
+        this.collaborators = collaborators;
         this.description = description;
+        this.id = id;
         this.language = language;
-        this.publicProject = publicProject;
+        this.name = name;
         this.owner = owner;
+        this.publicProject = publicProject;
     }
 
     public String getId() {
@@ -112,5 +124,13 @@ public class Project extends AuditableEntity {
 
     public void setPublicProject(boolean publicProject) {
         this.publicProject = publicProject;
+    }
+
+    public Set<User> getCollaborators() {
+        return collaborators;
+    }
+
+    public void setCollaborators(Set<User> collaborators) {
+        this.collaborators = collaborators;
     }
 }

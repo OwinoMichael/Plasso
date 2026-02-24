@@ -1,7 +1,7 @@
-package com.mikeo.plasso.application.auth.service;
+package com.mikeo.plasso.application.auth.service.email_pass;
 
 import com.mikeo.plasso.Command;
-import com.mikeo.plasso.application.auth.model.userpass.LoginRequest;
+import com.mikeo.plasso.application.auth.model.email_pass.LoginRequest;
 import com.mikeo.plasso.application.security.JWTUtil;
 import com.mikeo.plasso.features.users.UserRepository;
 import com.mikeo.plasso.features.users.entity.User;
@@ -75,13 +75,15 @@ public class LoginService implements Command<LoginRequest, T> {
             );
 
             // Generate token for verified and authenticated user
-            String token = jwtUtil.generateToken(user.getEmail());
+            String token = jwtUtil.generateToken(user.getEmail(), user.getId());
 
             return ResponseEntity.ok(Map.of(
                     "token", token,
-                    "email", user.getEmail(),
-                    "id", user.getId(),
-                    "verified", true
+                    "user", Map.of(
+                            "id", user.getId(),
+                            "email", user.getEmail(),
+                            "verified", user.getIsEmailVerified()
+                    )
             ));
 
         } catch (BadCredentialsException e) {

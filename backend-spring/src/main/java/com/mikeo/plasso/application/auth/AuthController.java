@@ -3,12 +3,15 @@ package com.mikeo.plasso.application.auth;
 
 import com.mikeo.plasso.application.auth.model.magic.MagicLinkRequest;
 import com.mikeo.plasso.application.auth.model.magic.UpdateUsernameRequest;
-import com.mikeo.plasso.application.auth.model.userpass.LoginRequest;
-import com.mikeo.plasso.application.auth.model.userpass.ResendVerificationContext;
-import com.mikeo.plasso.application.auth.model.userpass.ResendVerificationRequest;
-import com.mikeo.plasso.application.auth.model.userpass.UserRegistrationRequest;
-import com.mikeo.plasso.application.auth.service.*;
+import com.mikeo.plasso.application.auth.model.email_pass.LoginRequest;
+import com.mikeo.plasso.application.auth.model.email_pass.ResendVerificationContext;
+import com.mikeo.plasso.application.auth.model.email_pass.ResendVerificationRequest;
+import com.mikeo.plasso.application.auth.model.email_pass.UserRegistrationRequest;
 
+import com.mikeo.plasso.application.auth.service.email_pass.EmailVerificationService;
+import com.mikeo.plasso.application.auth.service.email_pass.LoginService;
+import com.mikeo.plasso.application.auth.service.email_pass.RegistrationService;
+import com.mikeo.plasso.application.auth.service.email_pass.ResendEmailVerificationService;
 import com.mikeo.plasso.application.auth.service.magic.MagicLinkService;
 import com.mikeo.plasso.application.auth.service.magic.UpdateUsernameService;
 import com.mikeo.plasso.application.security.JWTUtil;
@@ -125,7 +128,7 @@ public class AuthController {
             String token = authHeader.replace("Bearer ", "");
 
             // Extract email from token (since username might be null/email at this point)
-            String subject = jwtUtil.extractUsername(token);
+            String subject = jwtUtil.extractUserEmail(token);
 
             // Find user by subject (could be email or username)
             Optional<User> userOpt = userRepository.findByUsername(subject);

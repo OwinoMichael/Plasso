@@ -1,4 +1,4 @@
-package com.mikeo.plasso.features.projects.handleQueries;
+package com.mikeo.plasso.features.projects.hQueries;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -12,7 +12,7 @@ public class ProjectPagination {
     @Min(0) @Max(100)
     private int size;
 
-    private String sortBy = "createdAt";
+    private String sortBy = "updatedAt";
 
     private Sort.Direction sortDirection = Sort.Direction.DESC;
 

@@ -1,12 +1,11 @@
 package com.mikeo.plasso.application.security;
 
 
-import com.mikeo.plasso.application.auth.service.CustomUserDetailsService;
+import com.mikeo.plasso.application.auth.service.email_pass.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -50,6 +49,8 @@ public class SecurityConfig {
                     CorsConfiguration config = new CorsConfiguration();
                     config.addAllowedOrigin("http://localhost:5173"); // Vite default
                     config.addAllowedOrigin("http://localhost:3000"); // React default
+                    config.addAllowedOrigin("https://mikeowino.cloud");
+                    config.addAllowedOrigin("http://mikeowino.cloud");
                     config.addAllowedHeader("*");
                     config.addAllowedMethod("*");
                     config.setAllowCredentials(true);

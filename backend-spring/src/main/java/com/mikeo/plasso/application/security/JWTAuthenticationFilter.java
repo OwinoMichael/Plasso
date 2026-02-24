@@ -47,10 +47,13 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
         //validate token
         if(token != null && jwtUtil.validateToken(token)){
-            String username = jwtUtil.extractUsername(token);
+            String email = jwtUtil.extractUserEmail(token);
+            String userId = jwtUtil.extractUserId(token);  // Extract userId
 
-            //put our validated username into our security context holder
-            Authentication auth = new UsernamePasswordAuthenticationToken(username, null, Collections.emptyList());
+            // Store userId in request attribute
+            request.setAttribute("userId", userId);  // Make userId available
+
+            Authentication auth = new UsernamePasswordAuthenticationToken(email, null, Collections.emptyList());
             SecurityContextHolder.getContext().setAuthentication(auth);
         }
 

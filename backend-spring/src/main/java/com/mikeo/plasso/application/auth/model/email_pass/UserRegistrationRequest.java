@@ -1,6 +1,5 @@
-package com.mikeo.plasso.application.auth.model.userpass;
+package com.mikeo.plasso.application.auth.model.email_pass;
 
-import com.mikeo.plasso.application.auth.ValidationGroups;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

@@ -1,3 +1,5 @@
 backend-spring/src/main/resources/application.properties
 .env
 .env.local
+.env.development
+.env.production

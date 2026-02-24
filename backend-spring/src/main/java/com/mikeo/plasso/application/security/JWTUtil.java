@@ -1,5 +1,6 @@
 package com.mikeo.plasso.application.security;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -30,21 +31,31 @@ public class JWTUtil {
         KEY = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(String username) {
+    public String generateToken(String email, String userId) {
         return Jwts.builder()
-                .subject(username)
+                .subject(email)
+                .claim("userId", userId)  // Add userId as a claim
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
                 .signWith(KEY, Jwts.SIG.HS512)
                 .compact();
     }
 
-    public String extractUsername(String token) {
+    public String extractUserEmail(String token) {
         return Jwts.parser()
                 .verifyWith(KEY)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
+    }
+
+    public String extractUserId(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(KEY)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        return claims.get("userId", String.class);
     }
 
     public Boolean validateToken(String token) {

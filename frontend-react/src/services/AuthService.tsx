@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from './auth-header';
 import CustomError from './CustomError';
 
 
@@ -9,95 +9,56 @@ axios.defaults.headers.common['Content-Type'] = 'application/json';
 axios.defaults.withCredentials = true;
 
 class AuthService {
-  constructor() {
-    this.setupInterceptors();
-  }
-
-  private setupInterceptors() {
-    // Request interceptor - automatically add auth header to all requests
-    axios.interceptors.request.use(
-      (config) => {
-        const user = this.getCurrentUser();
-        if (user && user.token) {
-          config.headers.Authorization = `Bearer ${user.token}`;
-        }
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error);
-      }
-    );
-
-    // Response interceptor - handle auth errors globally
-    axios.interceptors.response.use(
-      (response) => {
-        return response;
-      },
-      (error) => {
-        const status = error.response?.status;
-        
-        // Handle 401 (Unauthorized) - token expired or invalid
-        if (status === 401) {
-          console.log('Token expired or invalid, logging out...');
-          this.logout();
-          // Redirect to login page
-          window.location.href = '/login';
-        }
-        
-        // Handle 403 (Forbidden) - could be unverified account
-        if (status === 403) {
-          const user = this.getCurrentUser();
-          if (user && !user.verified) {
-            window.location.href = '/unverified-email';
-          }
-        }
-        
-        return Promise.reject(error);
-      }
-    );
-  }
+  
+ 
 
   login(email: string, password: string) {
     console.log('Login attempt for:', email);
     
     return axios
-      .post(`${API_URL}/login`, {
-        email,
-        password,
-      })
-      .then((response: { data: { token: string; email: string; verified: boolean; id: string } }) => {
+      .post(`${API_URL}/login`, { email, password })
+      .then((response: { 
+        data: { 
+          token: string; 
+          user: {
+            id: string;
+            email: string; 
+            verified: boolean;
+            username?: string;
+          }
+        } 
+      }) => {
         console.log('Login response:', response);
         
-        if (response.data && response.data.token) {
+        if (response.data?.token) {
+          // Store user data with token
           localStorage.setItem(
             'user',
             JSON.stringify({
               token: response.data.token,
-              email: response.data.email,
-              verified: response.data.verified,
-              id: response.data.id
+              id: response.data.user.id,
+              email: response.data.user.email,
+              verified: response.data.user.verified,
+              username: response.data.user.username
             })
-            
           );
-          console.log('Login response data:', response.data);
-
-          
+          console.log('Login successful, user stored');
         } else {
-          console.warn('No token found in response:', response.data);
           throw new Error('No authentication token received');
         }
         
         return response.data;
       })
       .catch((error: any) => {
-        console.error('Login error in AuthService:', error);
+        console.error('Login error:', error);
         
         const status = error.response?.status;
         const errorData = error.response?.data;
         
+        // Handle account not verified
         if (status === 403 && 
             (errorData?.error === 'ACCOUNT_NOT_VERIFIED' || 
-             (typeof errorData === 'string' && errorData.toLowerCase().includes('not verified')))) {
+             errorData?.message?.toLowerCase().includes('not verified'))) {
           throw new CustomError(
             'Account not verified',
             'ACCOUNT_NOT_VERIFIED',
@@ -105,10 +66,8 @@ class AuthService {
           );
         }
         
-        if (status === 401 && 
-            (errorData?.error === 'INVALID_CREDENTIALS' || 
-             errorData === 'Invalid Credentials' ||
-             (typeof errorData === 'string' && errorData.toLowerCase().includes('invalid')))) {
+        // Handle invalid credentials
+        if (status === 401) {
           throw new CustomError(
             'Invalid email or password',
             'INVALID_CREDENTIALS',
@@ -193,6 +152,8 @@ class AuthService {
 
   verifyMagicLink(token: string) {
     console.log('Verifying magic link token');
+     console.log('🔗 API URL:', API_URL);  // Debug
+    console.log('🔗 Full URL:', `${API_URL}/verify-magic-link?token=${token}`);
     
     return axios
       .get(`${API_URL}/verify-magic-link?token=${token}`)
@@ -202,7 +163,7 @@ class AuthService {
           user: { 
             id: string; 
             email: string; 
-            username: string; 
+            username?: string; 
             emailVerified: boolean;
             hasUsername: boolean;
           } 
@@ -210,21 +171,20 @@ class AuthService {
       }) => {
         console.log('Magic link verification response:', response);
         
-        if (response.data && response.data.token) {
+        if (response.data?.token) {
           localStorage.setItem(
             'user',
             JSON.stringify({
               token: response.data.token,
+              id: response.data.user.id,
               email: response.data.user.email,
               verified: response.data.user.emailVerified,
-              id: response.data.user.id,
               username: response.data.user.username,
               hasUsername: response.data.user.hasUsername
             })
           );
-          console.log('Magic link verification data:', response.data);
+          console.log('Magic link verification successful');
         } else {
-          console.warn('No token found in magic link response:', response.data);
           throw new Error('No authentication token received');
         }
         
@@ -236,9 +196,9 @@ class AuthService {
         const status = error.response?.status;
         const errorData = error.response?.data;
         
-        if (status === 400) {
+        if (status === 400 || status === 401) {
           throw new CustomError(
-            errorData?.error || 'Invalid or expired magic link',
+            errorData?.message || 'Invalid or expired magic link',
             'INVALID_MAGIC_LINK',
             errorData
           );
@@ -263,16 +223,7 @@ class AuthService {
     return null;
   }
 
-  // You can remove getAuthHeader() since the interceptor handles this automatically
-  getAuthHeader() {
-    const user = this.getCurrentUser();
-    if (user && user.token) {
-      return { Authorization: `Bearer ${user.token}` };
-    } else {
-      return { Authorization: '' };
-    }
-  }
-
+  
   // Add method to validate token
   async validateToken(): Promise<boolean> {
     const user = this.getCurrentUser();

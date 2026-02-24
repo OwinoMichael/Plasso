@@ -1,9 +1,9 @@
-package com.mikeo.plasso.application.auth.service;
+package com.mikeo.plasso.application.auth.service.email_pass;
 
 import com.mikeo.plasso.Command;
 import com.mikeo.plasso.application.auth.ValidationGroups;
 import com.mikeo.plasso.application.auth.events.UserRegistrationEventObject;
-import com.mikeo.plasso.application.auth.model.userpass.UserRegistrationRequest;
+import com.mikeo.plasso.application.auth.model.email_pass.UserRegistrationRequest;
 import com.mikeo.plasso.application.security.JWTUtil;
 import com.mikeo.plasso.features.users.UserRepository;
 import com.mikeo.plasso.features.users.entity.User;
@@ -67,7 +67,7 @@ public class RegistrationService implements Command<UserRegistrationRequest, T> 
             User savedUser = usersRepository.save(user);
 
             // Generate verification token
-            String verificationToken = jwtUtil.generateToken(savedUser.getEmail());
+            String verificationToken = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getId());
             eventPublisher.publishEvent(new UserRegistrationEventObject(savedUser.getEmail(), verificationToken));
 
             return ResponseEntity.status(HttpStatus.CREATED)
