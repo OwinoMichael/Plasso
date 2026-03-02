@@ -37,7 +37,7 @@ public class ProjectController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "updatedAt") String sortBy,
             @RequestParam(defaultValue = "DESC") String sortDirection,
-            HttpServletRequest request){ //// ✅ Get userId from JWT instead
+            HttpServletRequest request){ //// Get userId from JWT instead
         logger.info("fetching projects");
 
         String userIdFromToken = (String) request.getAttribute("userId");
