@@ -28,6 +28,13 @@ const Project = () => {
   const [openFiles, setOpenFiles] = useState<OpenFile[]>([]);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
 
+  // Simple placeholder function - just logs for now
+  const handleAddCollaborator = (emailOrUsername: string) => {
+    console.log('Add collaborator:', emailOrUsername);
+    // You can add a toast notification later
+    alert(`Adding collaborator: ${emailOrUsername} (feature coming soon)`);
+  };
+
   const handleFileSelect = async (fileId: string, fileName: string) => {
 
   // const newFile: OpenFile = {
@@ -78,8 +85,7 @@ const Project = () => {
         onToggleConsole={() => setShowConsole(!showConsole)}
         showSidebar={showSidebar}
         showAIPanel={showAIPanel}
-        showConsole={showConsole}
-      />
+        onAddCollaborator={handleAddCollaborator} showConsole={false}     />
 
       <div className="flex-1 flex overflow-hidden">
         {showSidebar && id && (
