@@ -2,6 +2,7 @@ package com.mikeo.plasso.features.projects;
 
 import com.mikeo.plasso.features.projects.DTO.ProjectRequestDTO;
 import com.mikeo.plasso.features.projects.DTO.ProjectResponseDTO;
+import com.mikeo.plasso.features.projects.hCommands.AddColaborators;
 import com.mikeo.plasso.features.projects.hCommands.CreateProject;
 import com.mikeo.plasso.features.projects.hQueries.GetAllProjects;
 import com.mikeo.plasso.features.projects.hQueries.ProjectPagination;
@@ -21,14 +22,17 @@ public class ProjectController {
 
     private final CreateProject createProject;
     private final GetAllProjects getAllProjects;
+    private final AddColaborators addColaborators;
     private final Logger logger = LoggerFactory.getLogger(ProjectController.class);
 
-    public ProjectController(CreateProject createProject, GetAllProjects getAllProjects) {
+    public ProjectController(AddColaborators addColaborators, CreateProject createProject, GetAllProjects getAllProjects) {
+        this.addColaborators = addColaborators;
         this.createProject = createProject;
         this.getAllProjects = getAllProjects;
     }
 
     public record CreateProjectCommand(String id, ProjectRequestDTO projectRequestDTO){}
+    public record CollabCommand(String userId, String projectId, String emailOrUsername){}
 
     @GetMapping("/")
     public ResponseEntity<Page<ProjectResponseDTO>> getAllProjects(
@@ -69,5 +73,20 @@ public class ProjectController {
 
         return createProject.execute(projectCommand);
     }
+
+
+    @PostMapping("/{projectId}/add-collabs")
+    public ResponseEntity<Void> addCollab(
+            @PathVariable String projectId,
+            HttpServletRequest request,
+            @RequestBody String emailOrUsername
+    ){
+        String userId = (String) request.getAttribute("userId");
+
+        CollabCommand collabCommand = new CollabCommand(userId, projectId, emailOrUsername);
+
+        return addColaborators.execute(collabCommand);
+    }
+
 
 }

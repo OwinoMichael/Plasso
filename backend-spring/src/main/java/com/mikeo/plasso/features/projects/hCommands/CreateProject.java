@@ -69,13 +69,13 @@ public class CreateProject implements Command<ProjectController.CreateProjectCom
                 autoGenerateFiles.generateDefaultFiles(project, projectRequestDTO.getLanguage());
             }
 
-            return ResponseEntity.ok(mapToResponseDTO(project));
+            return ResponseEntity.ok(mapToResponseDTO(project, userId));
         } catch (Exception e) {
             throw e; // Re-throw to be handled by global exception handler
         }
     }
 
-    public ProjectResponseDTO mapToResponseDTO(Project project){
+    public ProjectResponseDTO mapToResponseDTO(Project project, String currentUserId){
         ProjectResponseDTO projectResponseDTO = new ProjectResponseDTO();
 
         projectResponseDTO.setId(project.getId());
@@ -84,6 +84,16 @@ public class CreateProject implements Command<ProjectController.CreateProjectCom
         projectResponseDTO.setLanguage(project.getLanguage());
         projectResponseDTO.setCreatedAt(project.getCreatedAt());
         projectResponseDTO.setUpdatedAt(project.getUpdatedAt());
+
+        // Set user role based on current user
+        boolean isOwner = project.getOwner().getId().equals(currentUserId);
+        projectResponseDTO.setUserRole(isOwner ? "OWNER" : "COLLABORATOR");
+
+        // Count collaborators EXCLUDING the owner
+        long collaboratorCount = project.getCollaborators().stream()
+                .filter(collab -> !collab.getId().equals(project.getOwner().getId()))
+                .count();
+        projectResponseDTO.setCollaborators((int) collaboratorCount);
 
         return projectResponseDTO;
     }

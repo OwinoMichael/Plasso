@@ -10,17 +10,37 @@ public class ProjectResponseDTO {
     private String language;
     private Instant createdAt;
     private Instant updatedAt;
+    private String userRole;
+    private Integer collaborators;
 
     public ProjectResponseDTO() {
     }
 
-    public ProjectResponseDTO(String id, String name, String description, String language, Instant createdAt, Instant updatedAt) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.language = language;
+    public ProjectResponseDTO(Integer collaborators, Instant createdAt, String description, String id, String language, String name, Instant updatedAt, String userRole) {
+        this.collaborators = collaborators;
         this.createdAt = createdAt;
+        this.description = description;
+        this.id = id;
+        this.language = language;
+        this.name = name;
         this.updatedAt = updatedAt;
+        this.userRole = userRole;
+    }
+
+    public Integer getCollaborators() {
+        return collaborators;
+    }
+
+    public void setCollaborators(Integer collaborators) {
+        this.collaborators = collaborators;
+    }
+
+    public String getUserRole() {
+        return userRole;
+    }
+
+    public void setUserRole(String userRole) {
+        this.userRole = userRole;
     }
 
     public Instant getUpdatedAt() {

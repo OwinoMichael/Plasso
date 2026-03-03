@@ -17,10 +17,12 @@ import com.mikeo.plasso.features.users.entity.User;
 import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 @Service
+@Transactional
 public class CreateFile implements Command<FileController.CreateFileCommand, FileResponseDTO> {
 
     private final FileRepository fileRepository;
