@@ -8,6 +8,7 @@ import type { OpenFile } from "@/types/editor";
 
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -27,12 +28,51 @@ const Project = () => {
   const [showConsole, setShowConsole] = useState(true);
   const [openFiles, setOpenFiles] = useState<OpenFile[]>([]);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
+   const [isAddingCollaborator, setIsAddingCollaborator] = useState(false);
 
-  // Simple placeholder function - just logs for now
-  const handleAddCollaborator = (emailOrUsername: string) => {
-    console.log('Add collaborator:', emailOrUsername);
-    // You can add a toast notification later
-    alert(`Adding collaborator: ${emailOrUsername} (feature coming soon)`);
+  // Implement the add collaborator function
+  const handleAddCollaborator = async (emailOrUsername: string) => {
+    if (!emailOrUsername.trim()) {
+      toast.error("Please enter an email or username");
+      return;
+    }
+
+    setIsAddingCollaborator(true);
+    
+    try {
+      await axios.post(
+        `${API_URL}/projects/${id}/add-collabs`,
+        emailOrUsername, // Send raw string as required by backend
+        {
+          headers: {
+            'Content-Type': 'text/plain', // Important! Backend expects raw string
+          },
+        }
+      );
+
+      toast.success("Collaborator added successfully");
+
+      // Optionally refresh project data or update UI
+      // fetchProjectDetails();
+
+    } catch (error: any) {
+      console.error('Failed to add collaborator:', error);
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data || 
+                          'Failed to add collaborator';
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      
+      // Re-throw so the dialog knows it failed
+      throw error;
+    } finally {
+      setIsAddingCollaborator(false);
+    }
   };
 
   const handleFileSelect = async (fileId: string, fileName: string) => {

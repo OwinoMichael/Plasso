@@ -127,6 +127,7 @@ const Navbar: React.FC<NavbarProps> = ({
                   />
                 </div>
               </div>
+              
               <DialogFooter>
                 <Button 
                   type="submit" 
