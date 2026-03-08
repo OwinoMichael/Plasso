@@ -60,6 +60,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers("/login", "/createNewUser", "/verify", "/magic-link", "/verify-magic-link").permitAll();
                     auth.requestMatchers("/validate-token").authenticated();
+                    auth.requestMatchers("/ws/**").authenticated();
                     auth.anyRequest().authenticated();
                 })
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

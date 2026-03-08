@@ -1,0 +1,9 @@
+The problem with per-keystroke DB writes
+
+Every keystroke → fileRepository.save() → DB write → slow feedback loop, DB hammering under load.
+
+The solution: in-memory buffer + scheduled flush
+
+keystroke → update ConcurrentHashMap (instant) → broadcast to collaborators (instant)
+                                                          ↓
+                                              scheduled flush every ~2-3s → DB
