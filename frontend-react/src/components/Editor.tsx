@@ -10,13 +10,15 @@ interface EditorProps {
   setOpenFiles: React.Dispatch<React.SetStateAction<OpenFile[]>>;
   activeFileId: string | null;
   setActiveFileId: (id: string | null) => void;
+  onEdit: (fileId: string, content: string) => void; // ← new
 }
 
 const Editor: React.FC<EditorProps> = ({
   openFiles,
   setOpenFiles,
   activeFileId,
-  setActiveFileId
+  setActiveFileId,
+  onEdit
 }) => {
 
   /* ===============================
@@ -45,20 +47,25 @@ const Editor: React.FC<EditorProps> = ({
     }));
   };
 
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleEditorChange = (value?: string) => {
     if (!activeFileId) return;
 
+    // 1. Update local state immediately (fast UI)
     setOpenFiles(files =>
       files.map(file =>
         file.id === activeFileId
-          ? {
-              ...file,
-              content: value ?? "",
-              isDirty: true
-            }
+          ? { ...file, content: value ?? '', isDirty: true }
           : file
       )
     );
+
+    // 2. Debounce the WS send — fires 300ms after user stops typing
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      onEdit(activeFileId, value ?? '');
+    }, 300);
   };
 
   const closeTab = (fileId: string, e: React.MouseEvent) => {

@@ -21,9 +21,10 @@ interface SidebarProps {
   selectedFile: string | null;
   onFileSelect: (fileId: string, fileName: string) => void;
   onClose: () => void;
+  activeUsers: { userId: string; username: string; color: string }[];
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect, onClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect, onClose, activeUsers }) => {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [fileTree, setFileTree] = useState<FileTreeNode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,11 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
 
-  const activeUsers = [
-    { name: 'You', color: '#85E4FF', cursor: { line: 15, col: 23 } },
-    { name: 'Alice', color: '#00FF88', cursor: { line: 8, col: 12 } },
-    { name: 'Bob', color: '#FF6B9D', cursor: { line: 22, col: 5 } }
-  ];
+  
 
   useEffect(() => {
     fetchFileTree();
@@ -426,18 +423,17 @@ const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect
       </div>
       
       <div className="p-3 border-t border-sidebar-border">
-        <div className="flex items-center gap-2 mb-2">
-          <Users className="w-4 h-4" />
-          <span className="text-xs font-semibold">ACTIVE USERS</span>
-        </div>
-        {activeUsers.map((user, idx) => (
-          <div key={idx} className="flex items-center gap-2 py-1">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: user.color }} />
-            <span className="text-xs">{user.name}</span>
-            <span className="text-xs text-muted-foreground ml-auto">Ln {user.cursor.line}</span>
-          </div>
-        ))}
+      <div className="flex items-center gap-2 mb-2">
+        <Users className="w-4 h-4" />
+        <span className="text-xs font-semibold">ACTIVE USERS</span>
       </div>
+      {activeUsers.map((user) => (
+        <div key={user.userId} className="flex items-center gap-2 py-1">
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: user.color }} />
+          <span className="text-xs">{user.username}</span>
+        </div>
+      ))}
+    </div>
     </div>
   );
 };

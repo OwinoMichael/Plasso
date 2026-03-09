@@ -6,21 +6,35 @@ import Sidebar from "@/components/Sidebar";
 import axios from "@/services/auth-header";
 import type { OpenFile } from "@/types/editor";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
+
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws';
 
+interface ActiveUser {
+  userId: string;
+  username: string;
+  color: string;
+  fileId: string;
+}
 
+const USER_COLORS = ['#85E4FF', '#00FF88', '#FF6B9D', '#FFD700', '#FF8C42'];
 
 // pages/Project.tsx
 const Project = () => {
 
-  
-
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  const { user } = useAuthService(); // your existing auth
+
+  const stompClient = useRef<Client | null>(null);
+
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [selectedFileName, setSelectedFileName] = useState<string>('');
   const [showSidebar, setShowSidebar] = useState(true);
@@ -28,7 +42,137 @@ const Project = () => {
   const [showConsole, setShowConsole] = useState(true);
   const [openFiles, setOpenFiles] = useState<OpenFile[]>([]);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
-   const [isAddingCollaborator, setIsAddingCollaborator] = useState(false);
+  const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
+  const [isAddingCollaborator, setIsAddingCollaborator] = useState(false);
+
+  // ── Connect STOMP on mount ──────────────────────────────────────────
+  useEffect(() => {
+    if (!id || !user) return;
+
+    const client = new Client({
+      webSocketFactory: () => new SockJS(WS_URL),
+      reconnectDelay: 3000,
+      onConnect: () => {
+        stompClient.current = client;
+        console.log('WS connected');
+      },
+      onDisconnect: () => console.log('WS disconnected'),
+    });
+
+    client.activate();
+    stompClient.current = client;
+
+    return () => {
+      // Leave current file and disconnect cleanly
+      if (activeFileId && stompClient.current?.connected) {
+        stompClient.current.publish({
+          destination: '/app/file.leave',
+          body: JSON.stringify({ fileId: activeFileId, projectId: id, userId: user.id }),
+        });
+      }
+      client.deactivate();
+    };
+  }, [id, user]);
+
+  // ── Join file: subscribe to edits + presence ────────────────────────
+  const joinFile = (fileId: string) => {
+    const client = stompClient.current;
+    if (!client?.connected || !id || !user) return;
+
+    // Leave previous file first
+    if (activeFileId && activeFileId !== fileId) {
+      client.publish({
+        destination: '/app/file.leave',
+        body: JSON.stringify({ fileId: activeFileId, projectId: id, userId: user.id }),
+      });
+    }
+
+    // Subscribe to edits from collaborators
+    client.subscribe(
+      `/topic/project/${id}/file/${fileId}/edits`,
+      (msg) => {
+        const edit = JSON.parse(msg.body);
+        if (edit.editorUserId === user.id) return; // ignore own broadcasts
+
+        setOpenFiles(prev =>
+          prev.map(f =>
+            f.id === fileId ? { ...f, content: edit.content, isDirty: false } : f
+          )
+        );
+      }
+    );
+
+    // Subscribe to presence (who's viewing this file)
+    client.subscribe(
+      `/topic/project/${id}/file/${fileId}/presence`,
+      (msg) => {
+        const presence = JSON.parse(msg.body);
+        // presence.viewerIds is a Set<String> from backend
+        setActiveUsers(prev => {
+          const others = prev.filter(u => !presence.viewerIds.includes(u.userId) && u.fileId !== fileId);
+          const updated = [...presence.viewerIds].map((uid: string, i: number) => ({
+            userId: uid,
+            username: uid === user.id ? 'You' : uid, // backend could send username too
+            color: USER_COLORS[i % USER_COLORS.length],
+            fileId,
+          }));
+          return [...others, ...updated];
+        });
+      }
+    );
+
+    // Announce join
+    client.publish({
+      destination: '/app/file.join',
+      body: JSON.stringify({ fileId, projectId: id, userId: user.id }),
+    });
+  };
+
+  // ── Send edit via WS ────────────────────────────────────────────────
+  const sendEdit = (fileId: string, content: string) => {
+    const client = stompClient.current;
+    if (!client?.connected || !id || !user) return;
+
+    client.publish({
+      destination: '/app/file.edit',
+      body: JSON.stringify({
+        fileId,
+        projectId: id,
+        userId: user.id,
+        content,
+        timestamp: Date.now(),
+      }),
+    });
+  };
+
+  // ── File select: load content + join WS file session ───────────────
+  const handleFileSelect = async (fileId: string, fileName: string) => {
+    const existing = openFiles.find(f => f.id === fileId);
+    if (existing) {
+      setActiveFileId(fileId);
+      joinFile(fileId);
+      return;
+    }
+
+    try {
+      const res = await axios.get(`${API_URL}/projects/${id}/files/${fileId}`);
+      const file = res.data;
+
+      // If file is buffered in server memory, WS content is fresher —
+      // but on initial load REST is fine since buffer flushes every 2s
+      setOpenFiles(prev => [...prev, {
+        id: fileId,
+        name: fileName,
+        content: file.content,
+        language: file.language || 'text',
+        isDirty: false,
+      }]);
+      setActiveFileId(fileId);
+      joinFile(fileId);
+    } catch (err) {
+      console.error('Failed loading file', err);
+    }
+  };
 
   // Implement the add collaborator function
   const handleAddCollaborator = async (emailOrUsername: string) => {
@@ -62,11 +206,7 @@ const Project = () => {
                           error.response?.data || 
                           'Failed to add collaborator';
       
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
       
       // Re-throw so the dialog knows it failed
       throw error;
@@ -134,6 +274,7 @@ const Project = () => {
             selectedFile={selectedFileId}
             onFileSelect={handleFileSelect}
             onClose={() => setShowSidebar(false)}
+            activeUsers={activeUsers} 
           />
         )}
 
@@ -144,6 +285,7 @@ const Project = () => {
               setOpenFiles={setOpenFiles}
               activeFileId={activeFileId}
               setActiveFileId={setActiveFileId}
+              onEdit={sendEdit}               // ← WS edit sender
             />
             {showAIPanel && <AIPanel onClose={() => setShowAIPanel(false)} />}
           </div>
