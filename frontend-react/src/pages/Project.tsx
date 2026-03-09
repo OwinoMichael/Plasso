@@ -126,6 +126,36 @@ const joinFile = (fileId: string) => {
     }
   );
 
+  client.subscribe(
+    `/topic/project/${id}/file/${fileId}/cursors`,
+    (msg) => {
+      const cursor = JSON.parse(msg.body);
+      if (cursor.userId === user.id) return;
+
+      setActiveUsers(prev => {
+        const exists = prev.find(u => u.userId === cursor.userId);
+
+        if (exists) {
+          // Update existing user's cursor
+          return prev.map(u =>
+            u.userId === cursor.userId
+              ? { ...u, cursor: { line: cursor.line, column: cursor.column } }
+              : u
+          );
+        } else {
+          // User not in list yet — add them with cursor
+          return [...prev, {
+            userId: cursor.userId,
+            username: cursor.username,
+            color: USER_COLORS[prev.length % USER_COLORS.length],
+            fileId,
+            cursor: { line: cursor.line, column: cursor.column },
+          }];
+        }
+      });
+    }
+  );
+
   client.publish({
     destination: '/app/file.join',
     body: JSON.stringify({
@@ -311,6 +341,8 @@ const sendCursor = (fileId: string, line: number, column: number) => {
               setActiveFileId={setActiveFileId}
               onEdit={sendEdit} // ← WS edit sender
               onCursorChange={sendCursor}
+              currentUserId={user?.id ?? ''}
+              activeUsers={activeUsers}
                         />
             {showAIPanel && <AIPanel onClose={() => setShowAIPanel(false)} />}
           </div>

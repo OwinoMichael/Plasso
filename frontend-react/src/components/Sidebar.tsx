@@ -192,6 +192,8 @@ const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect
     setNewItemName('');
   };
 
+  //console.log(User?.cursor.line)
+
   const renderFileTree = (nodes: FileTreeNode[], level: number = 0): React.ReactNode => {
     return nodes.map(node => {
       const isExpanded = expandedFolders.has(node.id);

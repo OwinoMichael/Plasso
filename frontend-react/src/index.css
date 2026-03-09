@@ -68,3 +68,51 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Collaborator cursors in Monaco editor */
+/* Cursor line */
+[class^="collaborator-cursor-"]::before {
+  content: '';
+  border-left: 2px solid;
+  height: 1.2em;
+  position: absolute;
+  animation: blink 1s step-end infinite;
+}
+
+/* Username label */
+[class^="collaborator-label-"] {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px 3px 3px 0;
+  color: #001F3F;
+  position: absolute;
+  top: -18px;        /* float above the line */
+  left: 0;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
+
+}
+
+[class^="collaborator-label-"]::after {
+  /* content injected dynamically per user */
+}
+
+/* Per user colors */
+.collaborator-cursor-85E4FF::before { border-color: #85E4FF; }
+.collaborator-cursor-00FF88::before { border-color: #00FF88; }
+.collaborator-cursor-FF6B9D::before { border-color: #FF6B9D; }
+.collaborator-cursor-FFD700::before { border-color: #FFD700; }
+.collaborator-cursor-FF8C42::before { border-color: #FF8C42; }
+
+.collaborator-label-85E4FF { background-color: #85E4FF; }
+.collaborator-label-00FF88 { background-color: #00FF88; }
+.collaborator-label-FF6B9D { background-color: #FF6B9D; }
+.collaborator-label-FFD700 { background-color: #FFD700; }
+.collaborator-label-FF8C42 { background-color: #FF8C42; }
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
