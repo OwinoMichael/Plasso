@@ -29,7 +29,8 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                 path.equals("/verify") ||
                 path.equals("/magic-link") ||
                 path.equals("/verify-magic-link") ||
-                path.equals("/resend-verification");
+                path.equals("/resend-verification") ||
+                path.startsWith("/ws/");
     }
 
 

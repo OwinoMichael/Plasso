@@ -22,6 +22,7 @@ interface ActiveUser {
   username: string;
   color: string;
   fileId: string;
+  cursor?: { line: number; column: number };
 }
 
 const USER_COLORS = ['#85E4FF', '#00FF88', '#FF6B9D', '#FFD700', '#FF8C42'];
@@ -46,6 +47,9 @@ const Project = () => {
   const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
   const [isAddingCollaborator, setIsAddingCollaborator] = useState(false);
 
+  const userStr = localStorage.getItem('user');
+  const token = userStr ? JSON.parse(userStr).token : null;
+
   // ── Connect STOMP on mount ──────────────────────────────────────────
 useEffect(() => {
   if (!id || !user?.id) return;
@@ -53,9 +57,15 @@ useEffect(() => {
   const client = new Client({
     webSocketFactory: () => new SockJS(WS_URL),
     reconnectDelay: 3000,
+    connectHeaders: {
+      Authorization: `Bearer ${token}`,
+    },
     onConnect: () => {
       stompClient.current = client;
       console.log('WS connected');
+    },
+    onStompError: (frame) => {
+      console.error('STOMP error:', frame.headers['message'], frame.body);
     },
     onDisconnect: () => console.log('WS disconnected'),
   });
@@ -299,8 +309,9 @@ const sendCursor = (fileId: string, line: number, column: number) => {
               setOpenFiles={setOpenFiles}
               activeFileId={activeFileId}
               setActiveFileId={setActiveFileId}
-              onEdit={sendEdit}               // ← WS edit sender
-            />
+              onEdit={sendEdit} // ← WS edit sender
+              onCursorChange={sendCursor}
+                        />
             {showAIPanel && <AIPanel onClose={() => setShowAIPanel(false)} />}
           </div>
           {showConsole && <Console onClose={() => setShowConsole(false)} />}

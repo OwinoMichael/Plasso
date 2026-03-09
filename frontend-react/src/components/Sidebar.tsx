@@ -21,7 +21,7 @@ interface SidebarProps {
   selectedFile: string | null;
   onFileSelect: (fileId: string, fileName: string) => void;
   onClose: () => void;
-  activeUsers: { userId: string; username: string; color: string }[];
+  activeUsers: { userId: string; username: string; color: string, cursor?: { line: number; column: number }; }[];
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect, onClose, activeUsers }) => {
@@ -431,6 +431,11 @@ const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect
         <div key={user.userId} className="flex items-center gap-2 py-1">
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: user.color }} />
           <span className="text-xs">{user.username}</span>
+          {user.cursor && (
+            <span className="text-xs text-muted-foreground ml-auto">
+              Ln {user.cursor.line}
+            </span>
+          )}
         </div>
       ))}
     </div>
