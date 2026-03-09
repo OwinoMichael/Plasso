@@ -1,6 +1,8 @@
 package com.mikeo.plasso.features.collabWs;
 
+import com.mikeo.plasso.application.security.WebSocketAuthInterceptor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -10,6 +12,13 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    WebSocketAuthInterceptor webSocketAuthInterceptor;
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(webSocketAuthInterceptor);
+    }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {

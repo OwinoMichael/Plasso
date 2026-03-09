@@ -49,6 +49,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         if(token != null && jwtUtil.validateToken(token)){
             String email = jwtUtil.extractUserEmail(token);
             String userId = jwtUtil.extractUserId(token);  // Extract userId
+            String username = jwtUtil.extractUsername(token);  // Extract username
 
             // Store userId in request attribute
             request.setAttribute("userId", userId);  // Make userId available

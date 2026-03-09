@@ -39,7 +39,7 @@ services:
     container_name: react-app-local
     working_dir: /app
     environment:
-      - VITE_WS_URL=ws://localhost:8080/ws/audio
+      - VITE_WS_URL=ws://localhost:8080/ws/
       - VITE_API_URL=http://localhost:8080/api
       - VITE_REACT_APP_ENV=development
     depends_on:

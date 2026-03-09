@@ -12,6 +12,7 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import java.util.List;
 import java.util.Set;
 
 @Controller
@@ -44,14 +45,23 @@ public class WebSocketController {
     ) {
 
         String sessionId = headerAccessor.getSessionId();
-        sessionRegistry.joinFile(sessionId, msg.fileId(), msg.userId());
+        sessionRegistry.joinFile(sessionId, msg.fileId(), msg.userId(), msg.username());
 
         // Broadcast updated presence to all viewers of this file
-        Set<String> viewers = sessionRegistry.getViewers(msg.fileId());
+        Set<WebSocketSessionRegistry.ViewerInfo> viewers = sessionRegistry.getViewers(msg.fileId());
         messagingTemplate.convertAndSend( // convertAndSendToUser - is PRIVATE MESSAGING - Send message ONLY to that user
                 "/topic/project/" + msg.projectId() + "/file/" + msg.fileId() + "/presence",
                 new PresenceBroadcast(msg.fileId(), viewers, "JOIN", msg.userId())
         );
+    }
+
+    @MessageMapping("/file.cursor")
+    public void updateCursor(@Payload CursorMessage msg) {
+        messagingTemplate.convertAndSend(
+                "/topic/project/" + msg.projectId() + "/file/" + msg.fileId() + "/cursors",
+                msg
+        );
+        // No DB persistence needed — cursors are ephemeral
     }
 
     /**
@@ -66,7 +76,7 @@ public class WebSocketController {
         String sessionId = headerAccessor.getSessionId();
         sessionRegistry.leaveFile(sessionId);
 
-        Set<String> viewers = sessionRegistry.getViewers(msg.fileId());
+        Set<WebSocketSessionRegistry.ViewerInfo> viewers = sessionRegistry.getViewers(msg.fileId());
         messagingTemplate.convertAndSend(
                 "/topic/project/" + msg.projectId() + "/file/" + msg.fileId() + "/presence",
                 new PresenceBroadcast(msg.fileId(), viewers, "LEAVE", msg.userId())
@@ -162,13 +172,14 @@ public class WebSocketController {
     public record FilePresenceMessage(
             String fileId,
             String projectId,
-            String userId
+            String userId,
+            String username
     ) {}
 
     // Server broadcasts presence (who's viewing the file)
     public record PresenceBroadcast(
             String fileId,
-            Set<String> viewerIds,
+            Set<WebSocketSessionRegistry.ViewerInfo> viewers,
             String event,         // "JOIN" or "LEAVE"
             String userId
     ) {}
@@ -180,4 +191,15 @@ public class WebSocketController {
             String message,
             long savedAt
     ) {}
+
+    public record CursorMessage(
+            String fileId,
+            String projectId,
+            String userId,
+            String username,
+            int line,
+            int column
+    ) {}
+
+    //public record ViewerInfo(String userId, String username) {}
 }

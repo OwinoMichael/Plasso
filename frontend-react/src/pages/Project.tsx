@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import axios from "@/services/auth-header";
 import type { OpenFile } from "@/types/editor";
+import authService  from '../services/AuthService'
 
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -31,7 +32,7 @@ const Project = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { user } = useAuthService(); // your existing auth
+  const user = authService.getCurrentUser(); // your existing auth
 
   const stompClient = useRef<Client | null>(null);
 
@@ -46,133 +47,146 @@ const Project = () => {
   const [isAddingCollaborator, setIsAddingCollaborator] = useState(false);
 
   // ── Connect STOMP on mount ──────────────────────────────────────────
-  useEffect(() => {
-    if (!id || !user) return;
+useEffect(() => {
+  if (!id || !user?.id) return;
 
-    const client = new Client({
-      webSocketFactory: () => new SockJS(WS_URL),
-      reconnectDelay: 3000,
-      onConnect: () => {
-        stompClient.current = client;
-        console.log('WS connected');
-      },
-      onDisconnect: () => console.log('WS disconnected'),
-    });
+  const client = new Client({
+    webSocketFactory: () => new SockJS(WS_URL),
+    reconnectDelay: 3000,
+    onConnect: () => {
+      stompClient.current = client;
+      console.log('WS connected');
+    },
+    onDisconnect: () => console.log('WS disconnected'),
+  });
 
-    client.activate();
-    stompClient.current = client;
+  client.activate();
+  stompClient.current = client;
 
-    return () => {
-      // Leave current file and disconnect cleanly
-      if (activeFileId && stompClient.current?.connected) {
-        stompClient.current.publish({
-          destination: '/app/file.leave',
-          body: JSON.stringify({ fileId: activeFileId, projectId: id, userId: user.id }),
-        });
-      }
-      client.deactivate();
-    };
-  }, [id, user]);
-
-  // ── Join file: subscribe to edits + presence ────────────────────────
-  const joinFile = (fileId: string) => {
-    const client = stompClient.current;
-    if (!client?.connected || !id || !user) return;
-
-    // Leave previous file first
-    if (activeFileId && activeFileId !== fileId) {
-      client.publish({
+  return () => {
+    if (activeFileId && stompClient.current?.connected) {
+      stompClient.current.publish({
         destination: '/app/file.leave',
         body: JSON.stringify({ fileId: activeFileId, projectId: id, userId: user.id }),
       });
     }
+    client.deactivate();
+  };
+}, [id]);
 
-    // Subscribe to edits from collaborators
-    client.subscribe(
-      `/topic/project/${id}/file/${fileId}/edits`,
-      (msg) => {
-        const edit = JSON.parse(msg.body);
-        if (edit.editorUserId === user.id) return; // ignore own broadcasts
+// ── Join file: subscribe to edits + presence ────────────────────────
+const joinFile = (fileId: string) => {
+  const client = stompClient.current;
+  if (!client?.connected || !id || !user?.id) return;
 
-        setOpenFiles(prev =>
-          prev.map(f =>
-            f.id === fileId ? { ...f, content: edit.content, isDirty: false } : f
-          )
-        );
-      }
-    );
-
-    // Subscribe to presence (who's viewing this file)
-    client.subscribe(
-      `/topic/project/${id}/file/${fileId}/presence`,
-      (msg) => {
-        const presence = JSON.parse(msg.body);
-        // presence.viewerIds is a Set<String> from backend
-        setActiveUsers(prev => {
-          const others = prev.filter(u => !presence.viewerIds.includes(u.userId) && u.fileId !== fileId);
-          const updated = [...presence.viewerIds].map((uid: string, i: number) => ({
-            userId: uid,
-            username: uid === user.id ? 'You' : uid, // backend could send username too
-            color: USER_COLORS[i % USER_COLORS.length],
-            fileId,
-          }));
-          return [...others, ...updated];
-        });
-      }
-    );
-
-    // Announce join
+  if (activeFileId && activeFileId !== fileId) {
     client.publish({
-      destination: '/app/file.join',
-      body: JSON.stringify({ fileId, projectId: id, userId: user.id }),
+      destination: '/app/file.leave',
+      body: JSON.stringify({ fileId: activeFileId, projectId: id, userId: user.id }),
     });
-  };
+  }
 
-  // ── Send edit via WS ────────────────────────────────────────────────
-  const sendEdit = (fileId: string, content: string) => {
-    const client = stompClient.current;
-    if (!client?.connected || !id || !user) return;
+  client.subscribe(
+    `/topic/project/${id}/file/${fileId}/edits`,
+    (msg) => {
+      const edit = JSON.parse(msg.body);
+      if (edit.editorUserId === user.id) return;
 
-    client.publish({
-      destination: '/app/file.edit',
-      body: JSON.stringify({
-        fileId,
-        projectId: id,
-        userId: user.id,
-        content,
-        timestamp: Date.now(),
-      }),
-    });
-  };
-
-  // ── File select: load content + join WS file session ───────────────
-  const handleFileSelect = async (fileId: string, fileName: string) => {
-    const existing = openFiles.find(f => f.id === fileId);
-    if (existing) {
-      setActiveFileId(fileId);
-      joinFile(fileId);
-      return;
+      setOpenFiles(prev =>
+        prev.map(f =>
+          f.id === fileId ? { ...f, content: edit.content, isDirty: false } : f
+        )
+      );
     }
+  );
 
-    try {
-      const res = await axios.get(`${API_URL}/projects/${id}/files/${fileId}`);
-      const file = res.data;
-
-      // If file is buffered in server memory, WS content is fresher —
-      // but on initial load REST is fine since buffer flushes every 2s
-      setOpenFiles(prev => [...prev, {
-        id: fileId,
-        name: fileName,
-        content: file.content,
-        language: file.language || 'text',
-        isDirty: false,
-      }]);
-      setActiveFileId(fileId);
-      joinFile(fileId);
-    } catch (err) {
-      console.error('Failed loading file', err);
+  client.subscribe(
+    `/topic/project/${id}/file/${fileId}/presence`,
+    (msg) => {
+      const presence = JSON.parse(msg.body);
+      // presence.viewers is now List<ViewerInfo> with {userId, username}
+      setActiveUsers(
+        presence.viewers.map((viewer: { userId: string; username: string }, i: number) => ({
+          userId: viewer.userId,
+          username: viewer.userId === user.id ? 'You' : viewer.username,
+          color: USER_COLORS[i % USER_COLORS.length],
+          fileId,
+        }))
+      );
     }
-  };
+  );
+
+  client.publish({
+    destination: '/app/file.join',
+    body: JSON.stringify({
+      fileId,
+      projectId: id,
+      userId: user.id,
+      username: user.username,
+    }),
+  });
+};
+
+// ── Send edit via WS ────────────────────────────────────────────────
+const sendEdit = (fileId: string, content: string) => {
+  const client = stompClient.current;
+  if (!client?.connected || !id || !user?.id) return;
+
+  client.publish({
+    destination: '/app/file.edit',
+    body: JSON.stringify({
+      fileId,
+      projectId: id,
+      userId: user.id,
+      content,
+      timestamp: Date.now(),
+    }),
+  });
+};
+
+// ── File select: load content + join WS file session ───────────────
+const handleFileSelect = async (fileId: string, fileName: string) => {
+  const existing = openFiles.find(f => f.id === fileId);
+  if (existing) {
+    setActiveFileId(fileId);
+    joinFile(fileId);
+    return;
+  }
+
+  try {
+    const res = await axios.get(`${API_URL}/projects/${id}/files/${fileId}`);
+    const file = res.data;
+
+    setOpenFiles(prev => [...prev, {
+      id: fileId,
+      name: fileName,
+      content: file.content,
+      language: file.language || 'text',
+      isDirty: false,
+    }]);
+    setActiveFileId(fileId);
+    joinFile(fileId);
+  } catch (err) {
+    console.error('Failed loading file', err);
+  }
+};
+
+const sendCursor = (fileId: string, line: number, column: number) => {
+  const client = stompClient.current;
+  if (!client?.connected || !id || !user?.id) return;
+
+  client.publish({
+    destination: '/app/file.cursor',
+    body: JSON.stringify({
+      fileId,
+      projectId: id,
+      userId: user.id,
+      username: user.username,
+      line,
+      column,
+    }),
+  });
+};
 
   // Implement the add collaborator function
   const handleAddCollaborator = async (emailOrUsername: string) => {
@@ -215,45 +229,45 @@ const Project = () => {
     }
   };
 
-  const handleFileSelect = async (fileId: string, fileName: string) => {
+//   const handleFileSelect = async (fileId: string, fileName: string) => {
 
-  // const newFile: OpenFile = {
-  //   id: fileId,
-  //   name: fileName,
-  //   content: file.content,
-  //   language: file.language || "text",
-  //   isDirty: false
-  // };
+//   // const newFile: OpenFile = {
+//   //   id: fileId,
+//   //   name: fileName,
+//   //   content: file.content,
+//   //   language: file.language || "text",
+//   //   isDirty: false
+//   // };
 
-  // If already open → just activate tab
-  const existing = openFiles.find(f => f.id === fileId);
-  if (existing) {
-    setActiveFileId(fileId);
-    return;
-  }
+//   // If already open → just activate tab
+//   const existing = openFiles.find(f => f.id === fileId);
+//   if (existing) {
+//     setActiveFileId(fileId);
+//     return;
+//   }
 
-  try {
-    const res = await axios.get(
-      `${API_URL}/projects/${id}/files/${fileId}`
-    );
+//   try {
+//     const res = await axios.get(
+//       `${API_URL}/projects/${id}/files/${fileId}`
+//     );
 
-    const file = res.data;
+//     const file = res.data;
 
-    const newFile: OpenFile = {
-      id: fileId,
-      name: fileName,
-      content: file.content,
-      language: file.language || "text",
-      isDirty: false
-    };
+//     const newFile: OpenFile = {
+//       id: fileId,
+//       name: fileName,
+//       content: file.content,
+//       language: file.language || "text",
+//       isDirty: false
+//     };
 
-    setOpenFiles(prev => [...prev, newFile]);
-    setActiveFileId(fileId);
+//     setOpenFiles(prev => [...prev, newFile]);
+//     setActiveFileId(fileId);
 
-  } catch (err) {
-    console.error("Failed loading file", err);
-  }
-};
+//   } catch (err) {
+//     console.error("Failed loading file", err);
+//   }
+// };
 
   return (
     <div className="h-screen flex flex-col bg-background">

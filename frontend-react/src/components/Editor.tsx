@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import EditorMonaco from "@monaco-editor/react";
 import type { OpenFile } from "@/types/editor";
 import { FileCode } from "lucide-react";
@@ -11,6 +11,7 @@ interface EditorProps {
   activeFileId: string | null;
   setActiveFileId: (id: string | null) => void;
   onEdit: (fileId: string, content: string) => void; // ← new
+  onCursorChange: (fileId: string, line: number, column: number) => void;
 }
 
 const Editor: React.FC<EditorProps> = ({
@@ -18,7 +19,8 @@ const Editor: React.FC<EditorProps> = ({
   setOpenFiles,
   activeFileId,
   setActiveFileId,
-  onEdit
+  onEdit,
+  onCursorChange
 }) => {
 
   /* ===============================
@@ -26,6 +28,17 @@ const Editor: React.FC<EditorProps> = ({
   =============================== */
 
   const [theme, setTheme] = useState("vs-dark");
+
+  const editorRef = useRef<any>(null);
+
+  const handleEditorMount = (editor: any) => {
+  editorRef.current = editor;
+
+  editor.onDidChangeCursorPosition((e: any) => {
+    if (!activeFileId) return;
+    onCursorChange(activeFileId, e.position.lineNumber, e.position.column);
+  });
+};
 
   const [editorOptions, setEditorOptions] = useState({
     fontSize: 14,
@@ -205,6 +218,7 @@ const Editor: React.FC<EditorProps> = ({
             language={activeFile.language}
             value={activeFile.content}
             onChange={handleEditorChange}
+            onMount={handleEditorMount} 
             options={{
               ...editorOptions,
               automaticLayout: true,
