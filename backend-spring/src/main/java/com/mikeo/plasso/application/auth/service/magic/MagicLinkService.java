@@ -6,6 +6,7 @@ import com.mikeo.plasso.application.auth.events.EmailService;
 import com.mikeo.plasso.application.auth.model.magic.MagicLinkRequest;
 import com.mikeo.plasso.application.auth.model.magic.MagicLinkResponse;
 import com.mikeo.plasso.application.auth.model.magic.MagicLinkToken;
+import com.mikeo.plasso.application.exceptions.ResourceNotFoundException;
 import com.mikeo.plasso.application.security.JWTUtil;
 import com.mikeo.plasso.features.users.UserRepository;
 import com.mikeo.plasso.features.users.entity.User;
@@ -132,7 +133,7 @@ public class MagicLinkService implements Command<MagicLinkRequest, MagicLinkResp
                 logger.info("New user created via magic link: {}", email);
             } else {
                 user = userRepository.findUsersByEmail(email)
-                        .orElseThrow(() -> new RuntimeException("User not found"));
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
                 user.setLastLogin(Instant.now());
                 user.setEmailVerified(true);
@@ -150,7 +151,7 @@ public class MagicLinkService implements Command<MagicLinkRequest, MagicLinkResp
                     ? user.getUsername()
                     : user.getEmail();
 
-            String jwtToken = jwtUtil.generateToken(user.getEmail(), user.getId());
+            String jwtToken = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getUsername());
 
             // Build response
             Map<String, Object> response = new HashMap<>();

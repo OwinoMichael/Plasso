@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import EditorMonaco from "@monaco-editor/react";
+import React, { useEffect, useRef, useState } from "react";
+import EditorMonaco, { useMonaco } from "@monaco-editor/react";
 import type { OpenFile } from "@/types/editor";
 import { FileCode } from "lucide-react";
+import * as monaco from 'monaco-editor';
 
 
 
@@ -10,13 +11,21 @@ interface EditorProps {
   setOpenFiles: React.Dispatch<React.SetStateAction<OpenFile[]>>;
   activeFileId: string | null;
   setActiveFileId: (id: string | null) => void;
+  onEdit: (fileId: string, content: string) => void; // ← new
+  onCursorChange: (fileId: string, line: number, column: number) => void;
+  activeUsers: { userId: string; username: string; color: string; cursor?: { line: number; column: number } }[];
+  currentUserId: string;
 }
 
 const Editor: React.FC<EditorProps> = ({
   openFiles,
   setOpenFiles,
   activeFileId,
-  setActiveFileId
+  setActiveFileId,
+  onEdit,
+  onCursorChange,
+  activeUsers,
+  currentUserId
 }) => {
 
   /* ===============================
@@ -24,6 +33,19 @@ const Editor: React.FC<EditorProps> = ({
   =============================== */
 
   const [theme, setTheme] = useState("vs-dark");
+
+  const editorRef = useRef<any>(null);
+
+  
+
+  const handleEditorMount = (editor: any) => {
+  editorRef.current = editor;
+
+    editor.onDidChangeCursorPosition((e: any) => {
+      if (!activeFileId) return;
+      onCursorChange(activeFileId, e.position.lineNumber, e.position.column);
+    });
+  };
 
   const [editorOptions, setEditorOptions] = useState({
     fontSize: 14,
@@ -45,20 +67,25 @@ const Editor: React.FC<EditorProps> = ({
     }));
   };
 
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleEditorChange = (value?: string) => {
     if (!activeFileId) return;
 
+    // 1. Update local state immediately (fast UI)
     setOpenFiles(files =>
       files.map(file =>
         file.id === activeFileId
-          ? {
-              ...file,
-              content: value ?? "",
-              isDirty: true
-            }
+          ? { ...file, content: value ?? '', isDirty: true }
           : file
       )
     );
+
+    // 2. Debounce the WS send — fires 300ms after user stops typing
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      onEdit(activeFileId, value ?? '');
+    }, 300);
   };
 
   const closeTab = (fileId: string, e: React.MouseEvent) => {
@@ -84,7 +111,88 @@ const Editor: React.FC<EditorProps> = ({
      Active File
   =============================== */
 
+  console.log(activeUsers)
+
   const activeFile = openFiles.find(f => f.id === activeFileId);
+
+  const monacoInstance = useMonaco();
+
+  const decorationsRef = useRef<string[]>([]);
+
+  useEffect(() => {
+  const editor = editorRef.current;
+  console.log('Decoration effect:', { editor: !!editor, activeUsers });
+  if (!editor) return;
+
+  const newDecorations = activeUsers
+  .filter(u => u.cursor && u.userId !== currentUserId)
+  .map(u => ({
+    range: new monaco.Range(
+      u.cursor!.line,
+      u.cursor!.column,
+      u.cursor!.line,
+      u.cursor!.column + 1
+    ),
+    options: {
+      beforeContentClassName: `collaborator-cursor-${u.color.replace('#', '')}`,
+      inlineClassName: `collaborator-cursor-${u.color.replace('#', '')}`,
+      // Username label shown above cursor
+      after: {
+        content: ` ${u.username} `,
+        inlineClassName: `collaborator-label-${u.color.replace('#', '')}`,
+      },
+      hoverMessage: { value: u.username },
+    },
+  }));
+
+  decorationsRef.current = editor.deltaDecorations(
+    decorationsRef.current,
+    newDecorations
+  );
+  }, [activeUsers, currentUserId]);
+
+  // Inject a dynamic style tag for each user's name
+  useEffect(() => {
+    activeUsers
+      .filter(u => u.cursor && u.userId !== currentUserId)
+      .forEach(u => {
+        const styleId = `cursor-style-${u.userId}`;
+        if (!document.getElementById(styleId)) {
+          const style = document.createElement('style');
+          style.id = styleId;
+          style.innerHTML = `
+            .collaborator-label-${u.userId} {
+              background-color: ${u.color};
+              color: #001F3F;
+            }
+            .collaborator-label-${u.userId}::after {
+              content: '${u.username}';
+            }
+          `;
+          document.head.appendChild(style);
+        }
+      });
+  }, [activeUsers]);
+
+  const newDecorations = activeUsers
+  .filter(u => u.cursor && u.userId !== currentUserId)
+  .map(u => ({
+    range: new monacoInstance!.Range(
+      u.cursor!.line,
+      u.cursor!.column,
+      u.cursor!.line,
+      u.cursor!.column + 1
+    ),
+    options: {
+      beforeContentClassName: `collaborator-cursor-${u.color.replace('#', '')}`,
+      inlineClassName: `collaborator-cursor-${u.color.replace('#', '')}`,
+      after: {
+        content: '\u200B', // zero-width space so Monaco renders the decoration
+        inlineClassName: `collaborator-label-${u.userId}`,
+      },
+      hoverMessage: { value: u.username },
+    },
+  }));
 
   /* ===============================
      Render
@@ -198,6 +306,7 @@ const Editor: React.FC<EditorProps> = ({
             language={activeFile.language}
             value={activeFile.content}
             onChange={handleEditorChange}
+            onMount={handleEditorMount} 
             options={{
               ...editorOptions,
               automaticLayout: true,

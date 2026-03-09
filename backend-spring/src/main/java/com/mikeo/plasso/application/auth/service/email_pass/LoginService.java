@@ -75,7 +75,7 @@ public class LoginService implements Command<LoginRequest, T> {
             );
 
             // Generate token for verified and authenticated user
-            String token = jwtUtil.generateToken(user.getEmail(), user.getId());
+            String token = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getUsername());
 
             return ResponseEntity.ok(Map.of(
                     "token", token,

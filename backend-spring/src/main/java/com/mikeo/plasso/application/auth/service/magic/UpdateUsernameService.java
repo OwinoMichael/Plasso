@@ -71,7 +71,7 @@ public class UpdateUsernameService implements Command<UpdateUsernameRequest, Map
         logger.info("Username updated successfully for user: {}", email);
 
         // Generate new JWT with username as subject
-        String newToken = jwtUtil.generateToken(user.getEmail(), user.getId());
+        String newToken = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getUsername());
 
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Username updated successfully");

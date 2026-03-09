@@ -17,7 +17,7 @@ import AuthService from '@/services/AuthService';
 import axios from '@/services/auth-header';
 import CreateProjectDialog from './CreateProjectDialog';
 
-const API_URL = import.meta.env.REACT_APP_API_URL || 'http://localhost:8080';
+const API_URL = import.meta.env.REACT_API_URL || 'http://localhost:8080';
 
 interface Project {
   id: string;

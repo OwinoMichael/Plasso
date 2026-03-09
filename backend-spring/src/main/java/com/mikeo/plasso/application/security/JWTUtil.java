@@ -31,10 +31,11 @@ public class JWTUtil {
         KEY = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(String email, String userId) {
+    public String generateToken(String email, String userId, String username) {
         return Jwts.builder()
                 .subject(email)
-                .claim("userId", userId)  // Add userId as a claim
+                .claim("userId", userId)
+                .claim("username", username)
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
                 .signWith(KEY, Jwts.SIG.HS512)
                 .compact();
@@ -56,6 +57,15 @@ public class JWTUtil {
                 .parseSignedClaims(token)
                 .getPayload();
         return claims.get("userId", String.class);
+    }
+
+    public String extractUsername(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(KEY)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        return claims.get("username", String.class);
     }
 
     public Boolean validateToken(String token) {

@@ -16,6 +16,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -53,6 +55,8 @@ public class SecurityConfig {
                     config.addAllowedOrigin("http://mikeowino.cloud");
                     config.addAllowedHeader("*");
                     config.addAllowedMethod("*");
+                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                    config.setAllowedHeaders(List.of("*"));
                     config.setAllowCredentials(true);
                     return config;
                 }))
@@ -60,6 +64,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers("/login", "/createNewUser", "/verify", "/magic-link", "/verify-magic-link").permitAll();
                     auth.requestMatchers("/validate-token").authenticated();
+                    auth.requestMatchers("/ws/**").permitAll();
                     auth.anyRequest().authenticated();
                 })
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

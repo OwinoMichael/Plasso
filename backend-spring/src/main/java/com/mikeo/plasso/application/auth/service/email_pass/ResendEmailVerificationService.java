@@ -56,7 +56,7 @@ public class ResendEmailVerificationService implements Command<ResendVerificatio
         }
 
         // 3. Generate and send new token
-        String verificationToken = jwtUtil.generateToken(user.getEmail(), user.getId());
+        String verificationToken = jwtUtil.generateToken(user.getEmail(), user.getId(), user.getUsername());
         eventPublisher.publishEvent(new UserRegistrationEventObject(
                 user.getEmail(),
                 verificationToken,
