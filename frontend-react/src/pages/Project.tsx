@@ -46,6 +46,7 @@ const Project = () => {
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
   const [isAddingCollaborator, setIsAddingCollaborator] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
 
   const userStr = localStorage.getItem('user');
   const token = userStr ? JSON.parse(userStr).token : null;
@@ -269,6 +270,27 @@ const sendCursor = (fileId: string, line: number, column: number) => {
     }
   };
 
+  const handleRunProject = async () => {
+    setIsRunning(true);
+    setShowConsole(true);
+    try {
+      await runProject(id!, 'project'); // implement later
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const handleRunFile = async () => {
+    if (!activeFileId) return;
+    setIsRunning(true);
+    setShowConsole(true);
+    try {
+      await runProject(id!, 'file', activeFileId); // implement later
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
 //   const handleFileSelect = async (fileId: string, fileName: string) => {
 
 //   // const newFile: OpenFile = {
@@ -311,7 +333,7 @@ const sendCursor = (fileId: string, line: number, column: number) => {
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      <Navbar 
+      <Navbar
         projectName={`Project ${id || 'New'}`}
         onHome={() => navigate('/home')}
         onToggleSidebar={() => setShowSidebar(!showSidebar)}
@@ -319,7 +341,13 @@ const sendCursor = (fileId: string, line: number, column: number) => {
         onToggleConsole={() => setShowConsole(!showConsole)}
         showSidebar={showSidebar}
         showAIPanel={showAIPanel}
-        onAddCollaborator={handleAddCollaborator} showConsole={false}     />
+        showConsole={showConsole}
+        onAddCollaborator={handleAddCollaborator}
+        onRunFile={handleRunFile}
+        onRunProject={handleRunProject}
+        isRunning={isRunning}
+        activeFileName={openFiles.find(f => f.id === activeFileId)?.name}
+      />
 
       <div className="flex-1 flex overflow-hidden">
         {showSidebar && id && (
