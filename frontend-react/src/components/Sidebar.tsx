@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { FileCode, Plus, FolderPlus, Users, ChevronRight, ChevronDown, X, Loader2, Trash2, Star, FolderPlusIcon, FilePlus } from 'lucide-react';
+import { FileCode, Plus, FolderPlus, Users, ChevronRight, ChevronDown, X, Loader2, Trash2, Star, FolderPlusIcon, FilePlus, Play } from 'lucide-react';
 import axios from '../services/auth-header';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
@@ -22,9 +22,10 @@ interface SidebarProps {
   onFileSelect: (fileId: string, fileName: string) => void;
   onClose: () => void;
   activeUsers: { userId: string; username: string; color: string, cursor?: { line: number; column: number }; }[];
+  onRunFile: (fileId: string, fileName: string) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect, onClose, activeUsers }) => {
+const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect, onClose, activeUsers, onRunFile }) => {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [fileTree, setFileTree] = useState<FileTreeNode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +39,12 @@ const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect
   const [newItemName, setNewItemName] = useState('');
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
+  const [contextMenu, setContextMenu] = useState<{
+      fileId: string;
+      fileName: string;
+      x: number;
+      y: number;
+    } | null>(null);
 
   
 
@@ -303,6 +310,10 @@ const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect
           className={`flex items-center gap-2 px-2 py-1 hover:bg-accent cursor-pointer rounded text-sm group ${
             selectedFile === node.id ? 'bg-accent' : ''
           }`}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            setContextMenu({ fileId: node.id, fileName: node.name, x: e.clientX, y: e.clientY });
+          }}
           style={{ paddingLeft: `${level * 12 + 24}px` }}
         >
           <div className="flex items-center gap-2 flex-1" onClick={() => onFileSelect(node.id, node.name)}>
@@ -332,6 +343,41 @@ const Sidebar: React.FC<SidebarProps> = ({ projectId, selectedFile, onFileSelect
               <Trash2 className="w-3 h-3 text-destructive" />
             </button>
           </div>
+
+          {contextMenu && (
+            <>
+              {/* Backdrop to close on outside click */}
+              <div 
+                className="fixed inset-0 z-40" 
+                onClick={() => setContextMenu(null)} 
+              />
+              <div
+                className="fixed z-50 bg-card border border-border rounded shadow-lg py-1 text-sm"
+                style={{ top: contextMenu.y, left: contextMenu.x }}
+              >
+                <button
+                  className="flex items-center gap-2 px-3 py-1.5 hover:bg-accent w-full text-left"
+                  onClick={() => {
+                    onRunFile(contextMenu.fileId, contextMenu.fileName);
+                    setContextMenu(null);
+                  }}
+                >
+                  <Play className="w-3 h-3" />
+                  Run {contextMenu.fileName}
+                </button>
+                <button
+                  className="flex items-center gap-2 px-3 py-1.5 hover:bg-accent w-full text-left"
+                  onClick={() => {
+                    onFileSelect(contextMenu.fileId, contextMenu.fileName);
+                    setContextMenu(null);
+                  }}
+                >
+                  <FileCode className="w-3 h-3" />
+                  Open file
+                </button>
+              </div>
+            </>
+          )}
         </div>
       );
     });
