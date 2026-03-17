@@ -13,4 +13,6 @@ public interface FileRepository extends JpaRepository<ProjectFile, String> {
     boolean existsByProjectIdAndParentIdAndName(String projectId, String parentId, String name);
     ProjectFile findByProjectIdAndMainFileTrue(String projectId);
     List<ProjectFile> findByProjectIdAndFolderFalseAndIdNot(String projectId, String fileId);
+    List<ProjectFile> findByProjectId(String projectId);
+
 }

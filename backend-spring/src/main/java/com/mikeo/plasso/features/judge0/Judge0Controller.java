@@ -19,13 +19,8 @@ public class Judge0Controller {
 
     public record RunFileRequest(String fileId, String projectId) {}
     public record RunProjectRequest(String projectId) {}
-    public record ExecutionResult(
-            String stdout,
-            String stderr,
-            String status,      // "Accepted", "Runtime Error", etc.
-            double time,        // execution time in seconds
-            int memory          // memory used in KB
-    ) {}
+
+
 
     // Run a single file
     @GetMapping("/run-file/{fileId}")
