@@ -38,7 +38,9 @@ services:
       JWT_SECRET: ${JWT_SECRET}              # Add this
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
       MAIL_USER: ${MAIL_USER}  
-      MAIL_PASS: ${MAIL_PASS
+      MAIL_PASS: ${MAIL_PASS}
+      JUDGE0_API_KEY: ${JUDGE0_API_KEY}
+
       # Add any other environment variables your app needs
     depends_on:
       db:

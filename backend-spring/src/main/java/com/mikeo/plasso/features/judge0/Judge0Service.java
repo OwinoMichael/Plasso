@@ -8,9 +8,9 @@ import com.mikeo.plasso.features.files.entity.ProjectFile;
 import com.mikeo.plasso.features.projects.ProjectRepository;
 import com.mikeo.plasso.features.projects.entity.Project;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+
 
 import java.util.List;
 import java.util.Map;
@@ -19,19 +19,16 @@ import java.util.stream.Collectors;
 @Service
 public class Judge0Service {
 
-    @Bean
-    public WebClient.Builder webClientBuilder() {
-        return WebClient.builder();
-    }
+
 
     private final FileRepository fileRepository;
     private final ProjectRepository projectRepository;
     private final WebClient webClient;
 
-    public Judge0Service(FileRepository fileRepository, ProjectRepository projectRepository, WebClient webClient) {
+    public Judge0Service(FileRepository fileRepository, ProjectRepository projectRepository, WebClient.Builder webClientBuilder) {
         this.fileRepository = fileRepository;
         this.projectRepository = projectRepository;
-        this.webClient = webClient;
+        this.webClient = webClientBuilder.build();
     }
 
     @Value("${judge0.api.url}")

@@ -1,14 +1,9 @@
 import React, { useState } from 'react';
-import { X, ChevronUp } from 'lucide-react';
+import { X, ChevronUp, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import type { ExecutionResult } from '@/types/execution';
 
-interface ExecutionResult {
-  stdout: string | null;
-  stderr: string | null;
-  status: string;
-  time: number;
-  memory: number;
-}
+
 
 interface ConsoleProps {
   onClose: () => void;
@@ -104,3 +99,5 @@ const Console: React.FC<ConsoleProps> = ({ onClose, result, isRunning }) => {
     </div>
   );
 };
+
+export default Console;

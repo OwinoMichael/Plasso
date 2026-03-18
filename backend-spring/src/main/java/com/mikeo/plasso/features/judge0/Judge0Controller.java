@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/judge-zero")
+@RequestMapping("/judge0")
 public class Judge0Controller {
 
     private final Judge0Service judge0Service;

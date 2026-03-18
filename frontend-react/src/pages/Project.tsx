@@ -1,8 +1,8 @@
 import AIPanel from "@/components/AIPanel";
-import Console from "@/components/Console";
 import Editor from "@/components/Editor";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
+import Console from "@/components/Console"
 import axios from "@/services/auth-header";
 import type { OpenFile } from "@/types/editor";
 import authService  from '../services/AuthService'
@@ -12,7 +12,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-
+import type { ExecutionResult } from '../types/execution';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws';
@@ -47,6 +47,7 @@ const Project = () => {
   const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
   const [isAddingCollaborator, setIsAddingCollaborator] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [executionResult, setExecutionResult] = useState<ExecutionResult | null>(null);
 
   const userStr = localStorage.getItem('user');
   const token = userStr ? JSON.parse(userStr).token : null;
@@ -271,25 +272,53 @@ const sendCursor = (fileId: string, line: number, column: number) => {
   };
 
   const handleRunProject = async () => {
-    setIsRunning(true);
-    setShowConsole(true);
-    try {
-      await runProject(id!, 'project'); // implement later
-    } finally {
-      setIsRunning(false);
-    }
-  };
+  if (!id) return;
+  setIsRunning(true);
+  setShowConsole(true);
+  setExecutionResult(null);
+  try {
+    const res = await axios.get(`${API_URL}/judge0/run-project/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    setExecutionResult(res.data);
+  } catch (err: any) {
+    setExecutionResult({
+      stdout: null,
+      stderr: err.response?.data?.message || 'Execution failed',
+      status: 'Error',
+      time: 0,
+      memory: 0,
+    });
+  } finally {
+    setIsRunning(false);
+  }
+};
 
-  const handleRunFile = async () => {
-    if (!activeFileId) return;
-    setIsRunning(true);
-    setShowConsole(true);
-    try {
-      await runProject(id!, 'file', activeFileId); // implement later
-    } finally {
-      setIsRunning(false);
-    }
-  };
+const handleRunFile = async (fileId?: string) => {
+  const targetId = fileId || activeFileId;
+  if (!targetId) return;
+  setIsRunning(true);
+  setShowConsole(true);
+  setExecutionResult(null);
+  try {
+    const res = await axios.get(`${API_URL}/judge0/run-file/${targetId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    setExecutionResult(res.data);
+  } catch (err: any) {
+    setExecutionResult({
+      stdout: null,
+      stderr: err.response?.data?.message || 'Execution failed',
+      status: 'Error',
+      time: 0,
+      memory: 0,
+    });
+  } finally {
+    setIsRunning(false);
+  }
+};
+
+  
 
 //   const handleFileSelect = async (fileId: string, fileName: string) => {
 
@@ -343,7 +372,7 @@ const sendCursor = (fileId: string, line: number, column: number) => {
         showAIPanel={showAIPanel}
         showConsole={showConsole}
         onAddCollaborator={handleAddCollaborator}
-        onRunFile={handleRunFile}
+        onRunFile={() => handleRunFile()}
         onRunProject={handleRunProject}
         isRunning={isRunning}
         activeFileName={openFiles.find(f => f.id === activeFileId)?.name}
@@ -356,7 +385,8 @@ const sendCursor = (fileId: string, line: number, column: number) => {
             selectedFile={selectedFileId}
             onFileSelect={handleFileSelect}
             onClose={() => setShowSidebar(false)}
-            activeUsers={activeUsers} 
+            activeUsers={activeUsers}
+            onRunFile={(fileId, _) => handleRunFile(fileId)} 
           />
         )}
 
@@ -374,7 +404,13 @@ const sendCursor = (fileId: string, line: number, column: number) => {
                         />
             {showAIPanel && <AIPanel onClose={() => setShowAIPanel(false)} />}
           </div>
-          {showConsole && <Console onClose={() => setShowConsole(false)} />}
+          {showConsole && (
+            <Console
+              onClose={() => setShowConsole(false)}
+              result={executionResult}
+              isRunning={isRunning}
+            />
+          )}
         </div>
       </div>
     </div>

@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Terminal, Home, Upload, Download, Share2, Sparkles, Play, PanelLeft, PanelRight, PanelBottom, UserPlus, FileCode, ChevronDown } from 'lucide-react';
+import { Terminal, Home, Upload, Download, Share2, Sparkles, Play, PanelLeft, PanelRight, PanelBottom, UserPlus, FileCode, ChevronDown, Loader2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 
 
@@ -167,40 +167,44 @@ const Navbar: React.FC<NavbarProps> = ({
           </Button> */}
 
           <div className="flex items-center">
-          <Button 
-            variant="default" 
-            size="sm"
-            onClick={onRunProject}
-            disabled={isRunning}
-            className="rounded-r-none"
-          >
-            <Play className="w-4 h-4 mr-2" />
-            {isRunning ? 'Running...' : 'Run'}
-          </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={onRunProject}
+              disabled={isRunning}
+              className="rounded-r-none"
+            >
+              {isRunning
+                ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                : <Play className="w-4 h-4 mr-2" />
+              }
+              {isRunning ? 'Running...' : 'Run'}
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="rounded-l-none border-l border-primary-foreground/20 px-2"
+                  disabled={isRunning}
+                >
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onRunProject}>
+                  <Play className="w-3 h-3 mr-2" />
+                  Run Project (main file)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onRunFile} disabled={!activeFileName}>
+                  <FileCode className="w-3 h-3 mr-2" />
+                  Run {activeFileName || 'current file'}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="default" 
-                size="sm" 
-                className="rounded-l-none border-l border-primary-foreground/20 px-2"
-                disabled={isRunning}
-              >
-                <ChevronDown className="w-3 h-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onRunProject}>
-                <Play className="w-3 h-3 mr-2" />
-                Run Project (main file)
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onRunFile} disabled={!activeFileName}>
-                <FileCode className="w-3 h-3 mr-2" />
-                Run {activeFileName || 'current file'}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
         </div>
       </div>
     </>
