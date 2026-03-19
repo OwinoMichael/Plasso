@@ -80,7 +80,13 @@ public class Judge0Service {
                 .filter(ProjectFile::isMainFile)
                 .filter(f -> !f.isFolder())
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No main file set for this project"));
+                .orElseGet(() -> allFiles.stream()  // fallback: first file matching project language
+                        .filter(f -> !f.isFolder())
+                        .filter(f -> project.getLanguage() != null &&
+                                project.getLanguage().equalsIgnoreCase(f.getLanguage()))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalStateException(
+                                "No main file set. Right-click a file and set it as main.")));
 
         String language = mainFile.getLanguage();
         int languageId = resolveLanguageId(language);
