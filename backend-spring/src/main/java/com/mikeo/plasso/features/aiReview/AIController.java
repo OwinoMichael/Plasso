@@ -1,8 +1,10 @@
 package com.mikeo.plasso.features.aiReview;
 
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,5 +20,10 @@ public class AIController {
     ) {}
 
     @PostMapping("/")
-    public ResponseEntity<>
+    public ResponseEntity<ReviewItem> geminiReview(
+            HttpServletRequest request,
+            @RequestBody String fileId
+    ){
+        
+    }
 }
