@@ -24,6 +24,6 @@ public class AIController {
             HttpServletRequest request,
             @RequestBody String fileId
     ){
-        
+
     }
 }
