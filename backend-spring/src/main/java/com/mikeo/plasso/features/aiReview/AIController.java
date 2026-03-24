@@ -2,6 +2,7 @@ package com.mikeo.plasso.features.aiReview;
 
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,6 +25,10 @@ public class AIController {
             HttpServletRequest request,
             @RequestBody String fileId
     ){
+
+        String userId = (String) request.getAttribute("userId");
+
+        Pair<String, String> pair = Pair.of(userId, fileId);
 
     }
 }
