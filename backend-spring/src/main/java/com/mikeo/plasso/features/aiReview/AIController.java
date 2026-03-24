@@ -13,6 +13,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/ai-analysis")
 public class AIController {
 
+    private final AIController aiController;
+
+    public AIController(AIController aiController) {
+        this.aiController = aiController;
+    }
+
     public record ReviewItem(
             String type,      // "warning", "suggestion", "info"
             String title,
@@ -29,6 +35,8 @@ public class AIController {
         String userId = (String) request.getAttribute("userId");
 
         Pair<String, String> pair = Pair.of(userId, fileId);
+
+
 
     }
 }
