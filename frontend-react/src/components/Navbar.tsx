@@ -11,7 +11,9 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Terminal, Home, Upload, Download, Share2, Sparkles, Play, PanelLeft, PanelRight, PanelBottom, UserPlus } from 'lucide-react';
+import { Terminal, Home, Upload, Download, Share2, Sparkles, Play, PanelLeft, PanelRight, PanelBottom, UserPlus, FileCode, ChevronDown, Loader2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+
 
 interface NavbarProps {
   projectName: string;
@@ -22,7 +24,11 @@ interface NavbarProps {
   showSidebar: boolean;
   showAIPanel: boolean;
   showConsole: boolean;
-  onAddCollaborator: (emailOrUsername: string) => void; // New prop
+  onAddCollaborator: (emailOrUsername: string) => void;
+  onRunFile: () => void;      // run active file only
+  onRunProject: () => void;   // run all files from main
+  isRunning: boolean;
+  activeFileName?: string;
 }
 
 const Navbar: React.FC<NavbarProps> = ({ 
@@ -34,7 +40,12 @@ const Navbar: React.FC<NavbarProps> = ({
   showSidebar,
   showAIPanel,
   showConsole,
-  onAddCollaborator // New prop
+  onAddCollaborator,
+  isRunning,
+  activeFileName,
+  onRunProject,
+  onRunFile
+
 }) => {
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [collaboratorInput, setCollaboratorInput] = useState('');
@@ -150,10 +161,50 @@ const Navbar: React.FC<NavbarProps> = ({
             <Sparkles className="w-4 h-4 mr-2" />
             AI Review
           </Button>
-          <Button variant="default" size="sm">
+          {/* <Button variant="default" size="sm">
             <Play className="w-4 h-4 mr-2" />
             Run Code
-          </Button>
+          </Button> */}
+
+          <div className="flex items-center">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={onRunProject}
+              disabled={isRunning}
+              className="rounded-r-none"
+            >
+              {isRunning
+                ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                : <Play className="w-4 h-4 mr-2" />
+              }
+              {isRunning ? 'Running...' : 'Run'}
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="rounded-l-none border-l border-primary-foreground/20 px-2"
+                  disabled={isRunning}
+                >
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onRunProject}>
+                  <Play className="w-3 h-3 mr-2" />
+                  Run Project (main file)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onRunFile} disabled={!activeFileName}>
+                  <FileCode className="w-3 h-3 mr-2" />
+                  Run {activeFileName || 'current file'}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          
         </div>
       </div>
     </>
