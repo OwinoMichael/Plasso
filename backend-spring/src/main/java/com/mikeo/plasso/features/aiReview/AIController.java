@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/ai-analysis")
 public class AIController {
 
-    private final AIController aiController;
+    private final GeminiService geminiService;
 
-    public AIController(AIController aiController) {
-        this.aiController = aiController;
+    public AIController(GeminiService geminiService) {
+        this.geminiService = geminiService;
     }
 
     public record ReviewItem(
@@ -36,7 +36,7 @@ public class AIController {
 
         Pair<String, String> pair = Pair.of(userId, fileId);
 
-
+        return geminiService.execute(pair);
 
     }
 }
