@@ -402,7 +402,7 @@ const handleRunFile = async (fileId?: string) => {
               currentUserId={user?.id ?? ''}
               activeUsers={activeUsers}
                         />
-            {showAIPanel && <AIPanel onClose={() => setShowAIPanel(false)} />}
+            {showAIPanel && <AIPanel onClose={() => setShowAIPanel(false)} activeFileId={activeFileId} />}
           </div>
           {showConsole && (
             <Console
