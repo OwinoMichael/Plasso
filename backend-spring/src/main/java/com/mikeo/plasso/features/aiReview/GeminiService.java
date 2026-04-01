@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+
 import java.util.List;
 import java.util.Map;
 
@@ -31,9 +32,9 @@ public class GeminiService implements Command<Pair<String, String>, List<ReviewI
     @Value("${gemini.api.url}")
     private String geminiApiUrl;
 
-    public GeminiService(FileRepository fileRepository, WebClient webClient, ObjectMapper objectMapper, FileContentBuffer fileContentBuffer) {
+    public GeminiService(FileRepository fileRepository, WebClient.Builder webClientBuilder, ObjectMapper objectMapper, FileContentBuffer fileContentBuffer) {
         this.fileRepository = fileRepository;
-        this.webClient = webClient;
+        this.webClient = webClientBuilder.build();
         this.objectMapper = objectMapper;
         this.fileContentBuffer = fileContentBuffer;
     }
@@ -43,8 +44,12 @@ public class GeminiService implements Command<Pair<String, String>, List<ReviewI
         String userId = input.getFirst();
         String fileId = input.getSecond();
 
+        System.out.println("AI Review - userId: " + userId + " fileId: " + fileId);
+
         ProjectFile file = fileRepository.findById(fileId)
                 .orElseThrow(() -> new ResourceNotFoundException("File not found"));
+
+        System.out.println("File found: " + file.getName());
 
         verifyHasAccess(userId, file.getProject());
 
@@ -53,6 +58,8 @@ public class GeminiService implements Command<Pair<String, String>, List<ReviewI
         String language = file.getLanguage() != null ? file.getLanguage() : "code";
 
         String prompt = buildPrompt(content, language);
+
+        System.out.println("Access verified, calling Gemini...");
 
         String rawResponse = callGemini(prompt);
 
@@ -88,8 +95,14 @@ public class GeminiService implements Command<Pair<String, String>, List<ReviewI
                 .header("Content-Type", "application/json")
                 .bodyValue(requestBody)
                 .retrieve()
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                        clientResponse -> clientResponse.bodyToMono(String.class)
+                                .doOnNext(body -> System.err.println("Gemini API error: " + body))
+                                .map(body -> new RuntimeException("Gemini API error: " + body)))
                 .bodyToMono(Map.class)
                 .block();
+
+        System.out.println("Gemini response: " + response);
 
         // Extract text from Gemini response structure
         try {
@@ -100,6 +113,7 @@ public class GeminiService implements Command<Pair<String, String>, List<ReviewI
             Map part = (Map) parts.get(0);
             return (String) part.get("text");
         } catch (Exception e) {
+            System.err.println("Gemini call failed: " + e.getMessage()); // ← add this
             throw new RuntimeException("Failed to parse Gemini response", e);
         }
     }

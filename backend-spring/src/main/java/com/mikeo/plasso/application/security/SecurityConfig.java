@@ -1,6 +1,7 @@
 package com.mikeo.plasso.application.security;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mikeo.plasso.application.auth.service.email_pass.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -81,6 +82,11 @@ public class SecurityConfig {
     @Bean
     public WebClient.Builder webClientBuilder() {
         return WebClient.builder();
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
     }
 
 }

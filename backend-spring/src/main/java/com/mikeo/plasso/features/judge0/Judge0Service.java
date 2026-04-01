@@ -3,6 +3,7 @@ package com.mikeo.plasso.features.judge0;
 
 
 import com.mikeo.plasso.application.exceptions.ResourceNotFoundException;
+import com.mikeo.plasso.features.collabWs.cachingWrites.FileContentBuffer;
 import com.mikeo.plasso.features.files.FileRepository;
 import com.mikeo.plasso.features.files.entity.ProjectFile;
 import com.mikeo.plasso.features.projects.ProjectRepository;
@@ -24,11 +25,13 @@ public class Judge0Service {
     private final FileRepository fileRepository;
     private final ProjectRepository projectRepository;
     private final WebClient webClient;
+    private final FileContentBuffer fileContentBuffer;
 
-    public Judge0Service(FileRepository fileRepository, ProjectRepository projectRepository, WebClient.Builder webClientBuilder) {
+    public Judge0Service(FileRepository fileRepository, ProjectRepository projectRepository, WebClient.Builder webClientBuilder, FileContentBuffer fileContentBuffer) {
         this.fileRepository = fileRepository;
         this.projectRepository = projectRepository;
         this.webClient = webClientBuilder.build();
+        this.fileContentBuffer = fileContentBuffer;
     }
 
     @Value("${judge0.api.url}")
@@ -60,7 +63,8 @@ public class Judge0Service {
         // Verify access
         verifyAccess(file.getProject(), userId);
 
-        String source = file.getContent();
+        String source = fileContentBuffer.getContent(fileId)
+                .orElse(file.getContent());
         int languageId = resolveLanguageId(file.getLanguage());
 
         return submit(source, languageId);
