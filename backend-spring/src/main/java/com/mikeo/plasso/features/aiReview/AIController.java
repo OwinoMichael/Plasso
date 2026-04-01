@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/ai-analysis")
 public class AIController {
@@ -19,15 +21,10 @@ public class AIController {
         this.geminiService = geminiService;
     }
 
-    public record ReviewItem(
-            String type,      // "warning", "suggestion", "info"
-            String title,
-            String message,
-            Integer line      // nullable
-    ) {}
+
 
     @PostMapping("/")
-    public ResponseEntity<ReviewItem> geminiReview(
+    public ResponseEntity<List<ReviewItem>> geminiReview(
             HttpServletRequest request,
             @RequestBody String fileId
     ){
