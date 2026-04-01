@@ -3,6 +3,7 @@ package com.mikeo.plasso.features.aiReview;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mikeo.plasso.Command;
 import com.mikeo.plasso.application.exceptions.ResourceNotFoundException;
+import com.mikeo.plasso.features.collabWs.cachingWrites.FileContentBuffer;
 import com.mikeo.plasso.features.files.FileRepository;
 import com.mikeo.plasso.features.files.entity.ProjectFile;
 import com.mikeo.plasso.features.projects.entity.Project;
@@ -22,6 +23,7 @@ public class GeminiService implements Command<Pair<String, String>, List<ReviewI
     private final WebClient webClient;
     private final FileRepository fileRepository;
     private final ObjectMapper objectMapper;
+    private final FileContentBuffer fileContentBuffer;
 
     @Value("${gemini.api.key}")
     private String geminiApiKey;
@@ -29,10 +31,11 @@ public class GeminiService implements Command<Pair<String, String>, List<ReviewI
     @Value("${gemini.api.url}")
     private String geminiApiUrl;
 
-    public GeminiService(FileRepository fileRepository, WebClient webClient, ObjectMapper objectMapper) {
+    public GeminiService(FileRepository fileRepository, WebClient webClient, ObjectMapper objectMapper, FileContentBuffer fileContentBuffer) {
         this.fileRepository = fileRepository;
         this.webClient = webClient;
         this.objectMapper = objectMapper;
+        this.fileContentBuffer = fileContentBuffer;
     }
 
     @Override
@@ -45,10 +48,15 @@ public class GeminiService implements Command<Pair<String, String>, List<ReviewI
 
         verifyHasAccess(userId, file.getProject());
 
-        String content = file.getContent();
+        String content = fileContentBuffer.getContent(fileId)
+                .orElse(file.getContent());
         String language = file.getLanguage() != null ? file.getLanguage() : "code";
 
-        return null;
+        String prompt = buildPrompt(content, language);
+
+        String rawResponse = callGemini(prompt);
+
+        return ResponseEntity.ok(parseReviews(rawResponse));
     }
 
     private String buildPrompt(String content, String language) {
